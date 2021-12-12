@@ -30,12 +30,12 @@ typedef struct {
 /*@
     predicate ValidHeapArrangement(Heap *heap) =
         \valid(heap)
+        && 0 < HeapElementsCount(heap)
         && \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1))
-        && 0 <= HeapElementsCount(heap)
         && \forall integer x, y;
             0 <= x < HeapElementsCount(heap)
             && 0 <= y < HeapElementsCount(heap) ==>
-                IsChildren(y, x) <==>
+                IsChildren(y, x) ==>
                     HeapElementValue(heap, x) <= HeapElementValue(heap, y);
 */
 

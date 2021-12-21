@@ -17,34 +17,62 @@ typedef struct {
 */
 
 /*@
+    logic integer Parent(integer children) = (children - 1) / 2;
+    logic integer LeftChildren(integer parent) = 2 * parent + 1;
+    logic integer RightChildren(integer parent) = 2 * parent + 2;
+*/
+
+/*@
     predicate IsLeftChildren(integer children, integer parent) =
-        (2 * parent + 1) == children;
+        LeftChildren(parent) == children;
 
     predicate IsRightChildren(integer children, integer parent) =
-        (2 * parent + 2) == children;
+        RightChildren(parent) == children;
 
     predicate IsChildren(integer children, integer parent) =
         IsLeftChildren(children, parent) || IsRightChildren(children, parent);
+
+    predicate IsParent(integer parent, integer children) =
+        IsChildren(children, parent);
 */
 
 /*@
-    predicate ValidHeapArrangement(Heap *heap) =
+    inductive IsDescendant(integer descendant, integer ancestor, Heap *heap) {
+        case children:
+            \forall integer i, Heap *heap;
+                0 < i < HeapElementsCount(heap) ==>
+                    IsDescendant(i, Parent(i), heap);
+
+        case descendants:
+            \forall integer i, integer ancestor, Heap *heap;
+                0 <= ancestor < i < HeapElementsCount(heap) ==>
+                    IsDescendant(Parent(i), ancestor, heap) ==> 
+                        IsDescendant(i, ancestor, heap);
+    }
+*/
+
+/*@
+    predicate ValidHeap(Heap *heap) =
         \valid(heap)
         && 0 < HeapElementsCount(heap)
         && \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1))
-        && \forall integer x, y;
-            0 <= x < HeapElementsCount(heap)
-            && 0 <= y < HeapElementsCount(heap) ==>
-                IsChildren(y, x) ==>
-                    HeapElementValue(heap, x) <= HeapElementValue(heap, y);
+        && \forall integer ancestor, children;
+            0 <= ancestor < children < HeapElementsCount(heap) ==>
+                IsDescendant(children, ancestor, heap) ==>
+                    HeapElementValue(heap, ancestor) <= HeapElementValue(heap, children);
 */
 
 /*@
-    requires ValidHeapArrangement(heap);
+    requires ValidHeap(heap);
+
     assigns \nothing;
+    
+    ensures \exists integer i;
+        HeapElementValue(heap, i) == \result;
     ensures \forall integer i;
         0 <= i < HeapElementsCount(heap) ==>
-            \result <= HeapElementValue(heap, i);
+            IsDescendant(i, 0, heap) ==>
+                \result <= HeapElementValue(heap, i);
 */
 int HeapFindMin(Heap *heap) {
     return heap->elements[0];

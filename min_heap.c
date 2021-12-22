@@ -1,6 +1,6 @@
 //                  root at 0           root at 1
-// Left children    2 * index + 1       2 * index
-// Right children   2 * index + 2       2 * index + 1
+// Left child       2 * index + 1       2 * index
+// Right child      2 * index + 2       2 * index + 1
 // Parent           (index - 1) / 2     index / 2
 
 typedef struct {
@@ -10,44 +10,44 @@ typedef struct {
 } Heap;
 
 /*@
-    logic int * HeapElements{L}(Heap *heap) = heap->elements;
-    logic int   HeapElementsCount{L}(Heap *heap) = heap->count;
-    logic int   HeapElementsCapacity{L}(Heap *heap) = heap->capacity;
-    logic int   HeapElementValue{L}(Heap *heap, integer i) = heap->elements[i];
+    logic int * HeapElements         (Heap *heap)            = heap->elements;
+    logic int   HeapElementsCount    (Heap *heap)            = heap->count;
+    logic int   HeapElementsCapacity (Heap *heap)            = heap->capacity;
+    logic int   HeapElementValue     (Heap *heap, integer i) = heap->elements[i];
 */
 
 /*@
-    logic integer Parent(integer children) = (children - 1) / 2;
-    logic integer LeftChildren(integer parent) = 2 * parent + 1;
-    logic integer RightChildren(integer parent) = 2 * parent + 2;
+    logic integer Parent     (integer child)  = (child - 1) / 2;
+    logic integer LeftChild  (integer parent) = 2 * parent + 1;
+    logic integer RightChild (integer parent) = 2 * parent + 2;
 */
 
 /*@
-    predicate IsLeftChildren(integer children, integer parent) =
-        LeftChildren(parent) == children;
+    predicate IsLeftChild(integer child, integer parent) =
+        LeftChild(parent) == child;
 
-    predicate IsRightChildren(integer children, integer parent) =
-        RightChildren(parent) == children;
+    predicate IsRightChildren(integer child, integer parent) =
+        RightChil(parent) == child;
 
-    predicate IsChildren(integer children, integer parent) =
-        IsLeftChildren(children, parent) || IsRightChildren(children, parent);
+    predicate IsChild(integer child, integer parent) =
+        IsLeftChild(child, parent) || IsRightChild(child, parent);
 
-    predicate IsParent(integer parent, integer children) =
-        IsChildren(children, parent);
+    predicate IsParent(integer parent, integer child) =
+        IsChild(child, parent);
 */
 
 /*@
     inductive IsDescendant(integer descendant, integer ancestor, Heap *heap) {
         case children:
-            \forall integer i, Heap *heap;
-                0 < i < HeapElementsCount(heap) ==>
-                    IsDescendant(i, Parent(i), heap);
+            \forall integer child, Heap *heap;
+                0 < child < HeapElementsCount(heap) ==>
+                    IsDescendant(child, Parent(child), heap);
 
         case descendants:
-            \forall integer i, integer ancestor, Heap *heap;
-                0 <= ancestor < i < HeapElementsCount(heap) ==>
-                    IsDescendant(Parent(i), ancestor, heap) ==> 
-                        IsDescendant(i, ancestor, heap);
+            \forall integer ancestor, element, Heap *heap;
+                0 <= ancestor < element < HeapElementsCount(heap) ==>
+                    IsDescendant(Parent(element), ancestor, heap) ==> 
+                        IsDescendant(element, ancestor, heap);
     }
 */
 
@@ -56,23 +56,25 @@ typedef struct {
         \valid(heap)
         && 0 < HeapElementsCount(heap)
         && \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1))
-        && \forall integer ancestor, children;
-            0 <= ancestor < children < HeapElementsCount(heap) ==>
-                IsDescendant(children, ancestor, heap) ==>
-                    HeapElementValue(heap, ancestor) <= HeapElementValue(heap, children);
+        && \forall integer ancestor, element;
+            0 <= ancestor < element < HeapElementsCount(heap) ==>
+                IsDescendant(element, ancestor, heap) ==>
+                    HeapElementValue(heap, ancestor) <= HeapElementValue(heap, element);
 */
 
 /*@
     requires ValidHeap(heap);
-
-    assigns \nothing;
     
     ensures \exists integer i;
-        HeapElementValue(heap, i) == \result;
+        0 <= i < HeapElementsCount(heap) ==>
+            \result == HeapElementValue(heap, i);
+    
     ensures \forall integer i;
         0 <= i < HeapElementsCount(heap) ==>
             IsDescendant(i, 0, heap) ==>
                 \result <= HeapElementValue(heap, i);
+    
+    assigns \nothing;
 */
 int HeapFindMin(Heap *heap) {
     return heap->elements[0];

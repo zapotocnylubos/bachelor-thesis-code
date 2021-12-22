@@ -26,8 +26,8 @@ typedef struct {
     predicate IsLeftChild(integer child, integer parent) =
         LeftChild(parent) == child;
 
-    predicate IsRightChildren(integer child, integer parent) =
-        RightChil(parent) == child;
+    predicate IsRightChild(integer child, integer parent) =
+        RightChild(parent) == child;
 
     predicate IsChild(integer child, integer parent) =
         IsLeftChild(child, parent) || IsRightChild(child, parent);

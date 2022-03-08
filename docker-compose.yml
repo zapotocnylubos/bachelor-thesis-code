@@ -1,0 +1,66 @@
+version: '3.9'
+services:
+  proxy:
+    image: traefik:v2.6.1
+    restart: unless-stopped
+    command:
+      # Enable traefik dashboard on port 8080
+      - "--api.insecure=true"
+      # Dynamic configuration from docker engine
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      # HTTP entrypotin and redirection to HTTPS
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      # HTTPS entrypoint
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.http.tls=true"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    depends_on:
+      - frama-c-gui-novnc
+      - vscode-server
+
+  frama-c-gui:
+    image: framac/frama-c-gui:24.0
+    restart: unless-stopped
+    command: frama-c-gui
+    volumes:
+      - ./src:/home/opam/src
+    environment:
+      - DISPLAY=frama-c-gui-novnc:0.0
+    depends_on:
+      - frama-c-gui-novnc
+  
+  frama-c-gui-novnc:
+    image: theasp/novnc
+    restart: unless-stopped
+    environment:
+      - RUN_XTERM=no
+      - RUN_FLUXBOX=yes
+      - DISPLAY_WIDTH=1600
+      - DISPLAY_HEIGHT=900
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frama-c.rule=Host(`frama-c.${DOMAIN:-local}`)"
+      - "traefik.http.routers.frama-c.entrypoints=websecure"
+      - "traefik.http.routers.frama-c.middlewares=vnc-auto-resize"
+      - "traefik.http.middlewares.vnc-auto-resize.redirectregex.regex=^(https://frama-c.${DOMAIN:-local})/?$$"
+      - 'traefik.http.middlewares.vnc-auto-resize.redirectregex.replacement=$${1}/vnc.html?resize=scale&autoconnect=1'
+  
+  vscode-server:
+    image: codercom/code-server:4.1.0
+    restart: unless-stopped
+    volumes:
+      - ./src:/home/coder/src
+      - ./config/code-server:/home/coder/.config/code-server
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.vscode.rule=Host(`vscode.${DOMAIN:-local}`)"
+      - "traefik.http.routers.vscode.entrypoints=websecure"

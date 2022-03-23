@@ -80,17 +80,32 @@ typedef struct {
     assigns \nothing;
 */
 int HeapFindMin(Heap *heap) {
-    return  heap->elements[0];
+    return heap->elements[0];
 }
 
+/*@
+    requires child > 0;
+    ensures \result == Parent(child);
+    assigns \nothing;
+*/
 int HeapParent(int child) {
     return (child - 1) / 2;
 }
 
+/*@
+    requires parent >= 0;
+    ensures \result == LeftChild(parent);
+    assigns \nothing;
+*/
 int HeapLeftChild(int parent) {
     return (2 * parent) + 1;   
 }
 
+/*@
+    requires parent >= 0;
+    ensures \result == RightChild(parent);
+    assigns \nothing;
+*/
 int HeapRightChild(int parent) {
     return (2 * parent) + 2;
 }

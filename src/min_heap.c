@@ -5,14 +5,14 @@
 
 typedef struct {
     int *elements;
-    int count;
-    int capacity;
+    int elementsCount;
+    int elementsCapacity;
 } Heap;
 
 /*@
     logic int * HeapElements         (Heap *heap)            = heap->elements;
-    logic int   HeapElementsCount    (Heap *heap)            = heap->count;
-    logic int   HeapElementsCapacity (Heap *heap)            = heap->capacity;
+    logic int   HeapElementsCount    (Heap *heap)            = heap->elementsCount;
+    logic int   HeapElementsCapacity (Heap *heap)            = heap->elementsCapacity;
     logic int   HeapElementValue     (Heap *heap, integer i) = heap->elements[i];
 */
 

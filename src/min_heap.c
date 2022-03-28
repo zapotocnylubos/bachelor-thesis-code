@@ -138,18 +138,90 @@ void HeapInsert(Heap *heap, int element) {
     HeapBubbleUp(heap, index);
 }
 
+/*@
+    requires \valid(heap);
+    requires index >= 0;
+
+    assigns \nothing;
+
+    behavior has_left_child:
+        assumes LeftChild(index) < HeapElementsCount(heap);
+        ensures \result == 1;
+
+    behavior has_no_left_child:
+        assumes LeftChild(index) >= HeapElementsCount(heap);
+        ensures \result == 0;
+    
+    complete behaviors;
+    disjoint behaviors;
+*/
 int HeapHasLeftChild(Heap *heap, int index) {
     return HeapLeftChild(index) < heap->elementsCount;
 }
 
+/*@
+    requires \valid(heap);
+    requires index >= 0;
+
+    assigns \nothing;
+
+    behavior has_right_child:
+        assumes RightChild(index) < HeapElementsCount(heap);
+        ensures \result == 1;
+
+    behavior has_no_right_child:
+        assumes RightChild(index) >= HeapElementsCount(heap);
+        ensures \result == 0;
+    
+    complete behaviors;
+    disjoint behaviors;
+*/
 int HeapHasRightChild(Heap *heap, int index) {
     return HeapRightChild(index) < heap->elementsCount;
 }
 
+/*@
+    requires \valid(heap);
+    requires index >= 0;
+
+    assigns \nothing;
+
+    behavior has_child:
+        assumes LeftChild(index) < HeapElementsCount(heap) 
+                || RightChild(index) < HeapElementsCount(heap);
+        ensures \result == 1;
+
+    behavior has_no_childen:
+        assumes LeftChild(index) >= HeapElementsCount(heap) 
+                && RightChild(index) >= HeapElementsCount(heap);
+        ensures \result == 0;
+    
+    complete behaviors;
+    disjoint behaviors;
+*/
 int HeapHasChild(Heap *heap, int index) {
     return HeapHasLeftChild(heap, index) || HeapHasRightChild(heap, index);
 }
 
+/*@
+    requires \valid(heap);
+    requires index >= 0;
+
+    assigns \nothing;
+
+    behavior has_both_children:
+        assumes LeftChild(index) < HeapElementsCount(heap) 
+                && RightChild(index) < HeapElementsCount(heap);
+        ensures \result == 1;
+
+    behavior has_less_children:
+        assumes LeftChild(index) >= HeapElementsCount(heap) 
+                || RightChild(index) >= HeapElementsCount(heap);
+        ensures \result == 0;
+    
+    complete behaviors;
+    disjoint behaviors;
+*/
 int HeapHasBothChildren(Heap *heap, int index) {
     return HeapHasLeftChild(heap, index) && HeapHasRightChild(heap, index);
 }
@@ -212,10 +284,13 @@ int main() {
     HeapInsert(heap, 3);
     HeapInsert(heap, 2);
     HeapInsert(heap, 1);
-    printf("%d\n", HeapFindMin(heap));
-    HeapExtractMin(heap);
-    printf("%d\n", HeapFindMin(heap));
-    HeapExtractMin(heap);
-    printf("%d\n", HeapFindMin(heap));
-    HeapExtractMin(heap);
+
+    printf("%d\n", HeapHasLeftChild(heap, 0));
+    printf("%d\n", HeapHasLeftChild(heap, 1));
+    printf("%d\n", HeapHasLeftChild(heap, 2));
+
+    while (heap->elementsCount > 0) {
+        printf("%d\n", HeapFindMin(heap));
+        HeapExtractMin(heap);
+    }
 }

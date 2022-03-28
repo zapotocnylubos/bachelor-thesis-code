@@ -226,12 +226,51 @@ int HeapHasBothChildren(Heap *heap, int index) {
     return HeapHasLeftChild(heap, index) && HeapHasRightChild(heap, index);
 }
 
+/*@
+    requires \valid(heap);
+    requires index >= 0;
+    requires LeftChild(index) < HeapElementsCount(heap)
+             || RightChild(index) < HeapElementsCount(heap);
+
+    assigns \nothing;
+
+    behavior has_both_children_left_lower:
+        assumes LeftChild(index) < HeapElementsCount(heap) 
+                && RightChild(index) < HeapElementsCount(heap)
+                && HeapElementValue(heap, LeftChild(index)) < HeapElementValue(heap, RightChild(index));
+        ensures \result == LeftChild(index);
+
+    behavior has_both_children_right_lower:
+        assumes LeftChild(index) < HeapElementsCount(heap) 
+                && RightChild(index) < HeapElementsCount(heap)
+                && HeapElementValue(heap, RightChild(index)) < HeapElementValue(heap, LeftChild(index));
+        ensures \result == RightChild(index);
+
+    behavior has_both_children_same:
+        assumes LeftChild(index) < HeapElementsCount(heap) 
+                && RightChild(index) < HeapElementsCount(heap)
+                && HeapElementValue(heap, LeftChild(index)) == HeapElementValue(heap, RightChild(index));
+        ensures \result == LeftChild(index);
+
+    behavior has_only_left_child:
+        assumes LeftChild(index) < HeapElementsCount(heap) 
+                && RightChild(index) >= HeapElementsCount(heap);
+        ensures \result == LeftChild(index);
+
+    behavior has_only_right_child:
+        assumes RightChild(index) < HeapElementsCount(heap) 
+                && LeftChild(index) >= HeapElementsCount(heap);
+        ensures \result == RightChild(index);
+    
+    complete behaviors;
+    disjoint behaviors;
+*/
 int HeapGetLowerChild(Heap *heap, int index) {
     int leftChild = HeapLeftChild(index);
     int rightChild = HeapRightChild(index);
 
     if (HeapHasBothChildren(heap, index)) {
-        if (heap->elements[leftChild] < heap->elements[rightChild]) {
+        if (heap->elements[leftChild] <= heap->elements[rightChild]) {
             return leftChild;
         }
 

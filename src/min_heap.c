@@ -261,27 +261,29 @@ void HeapBubbleUp(Heap *heap, int index) {
     // }
 
     /*@
-        loop invariant 0 <= index < HeapElementsCount(heap);
+        //loop invariant 0 <= index <= HeapElementsCount(heap);
 
-        loop invariant \forall integer ancestor, descendant;
-            0 <= ancestor < descendant < index
-            && IsDescendant(ancestor, descendant, heap) ==>
-                HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
+        // loop invariant \forall integer ancestor, descendant;
+        //     0 <= ancestor < descendant < index
+        //     && IsDescendant(ancestor, descendant, heap) ==>
+        //         HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
 
-        loop invariant \forall integer ancestor, descendant;
-            index < ancestor < descendant < HeapElementsCount(heap)
-            && IsDescendant(ancestor, descendant, heap) ==>
-                HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
+        // loop invariant \forall integer ancestor, descendant;
+        //     index < ancestor < descendant < HeapElementsCount(heap)
+        //     && IsDescendant(ancestor, descendant, heap) ==>
+        //         HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
         
         // loop invariant index > 0 ==> 0 <= Parent(index) < HeapElementsCount(heap);
 
-        loop assigns index, HeapElements(heap)[0 .. HeapElementsCount(heap)-1];
-        loop   variant index;
+        loop assigns index, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+        // loop   variant index;
     */
     while (index > 0) {
+        //@ assert \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap)-1));
+        //@ assert 0 <= index < HeapElementsCount(heap);
         int parent = HeapParent(heap, index);
         //@ assert 0 <= index < HeapElementsCount(heap);
-        //@ assert 0 <= parent <= index;
+        //@ assert 0 <= parent <= index < HeapElementsCount(heap);
         //@ assert 0 <= parent < HeapElementsCount(heap);
         // assert \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap)-1));
 
@@ -620,4 +622,167 @@ void testIsAncestor(Heap *heap) {
     //@ assert !IsAncestor(2, 4, heap);
 
     //@ assert !IsAncestor(0, 0, heap);
+}
+
+/*@
+    requires \valid(heap)
+        && 0 <= HeapElementsCount(heap)
+        && \valid_read(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    
+    assigns \nothing;
+*/
+void testHeapTraversal(Heap *heap) {
+    /*@
+        loop invariant 0 <= i <= heap->elementsCount;
+
+        loop assigns i;
+        
+        loop variant heap->elementsCount-i;
+    */
+    for (int i = 0; i < heap->elementsCount; i++) {
+        printf("%d\n", heap->elements[i]);
+    }
+}
+
+/*@
+  requires \valid_read(a + (beg .. end-1));
+  requires beg < end;
+  assigns  \nothing;
+*/
+size_t min_idx_in(int* a, size_t beg, size_t end){
+    size_t min_i = beg;
+    /*@
+        loop invariant beg <= min_i < i <= end;
+        loop assigns min_i, i;
+        loop variant end-i;
+    */
+    for(size_t i = beg+1; i < end; ++i){
+        if(a[i] < a[min_i]) min_i = i; 
+    }
+    
+    return min_i; 
+}
+
+/*@
+  requires \valid_read(a + (beg .. end-1));
+  requires beg < end;
+  assigns  \nothing;
+*/
+size_t min_idx_in2(int* a, size_t beg, size_t end){
+    size_t min_i = end-1;
+    /*@
+        loop invariant (beg - 1) <= i < min_i <= end - 1;
+        loop assigns min_i, i;
+        loop variant (i-1) - beg;
+    */
+    for(size_t i = end-1-1; i >= beg; --i){
+        if(a[i] < a[min_i]) min_i = i; 
+    }
+    
+    return min_i; 
+}
+
+/*@
+  requires \valid(p) && \valid(q);
+  assigns  *p, *q;
+  ensures  *p == \old(*q) && *q == \old(*p);
+*/
+void swap(int* p, int* q){
+int tmp = *p; *p = *q; *q = tmp; }
+
+
+/*@
+ requires \valid(v+(0..n-1));
+ requires n > 0;
+ assigns v[0..n-1];
+ ensures \forall integer q; 0<=q<=n-1 ==> v[q]==(unsigned char)0;
+*/
+static void make_zero( unsigned char *v, size_t n ) {
+
+  unsigned char *p = (unsigned char*)v;
+
+  /*@
+    loop invariant 0 <= n <= \at(n, Pre);
+    //loop invariant p == v+(\at(n, Pre)-n);
+    //loop invariant \forall integer j;  0 <= j < (\at(n, Pre)-n) ==> v[j] == (unsigned char)0;
+    //loop assigns n, p, v[0..\at(n, Pre)-n-1];
+    loop variant n;
+  */
+
+  while( n-- ){
+    *p++ = 0;
+  }
+}
+
+
+/*@
+  requires 0 < child;
+  assigns \nothing;
+  ensures 0 <= \result < child;
+*/
+size_t random_between(size_t child) {
+    return (child - 1) / 2;
+}
+
+/*@
+    requires 0 <= bound < size;
+*/
+void random_loop(size_t bound, size_t size){
+    // size_t i = bound;
+    /*@
+        loop invariant 0 <= bound < size;
+        loop assigns bound;
+        loop variant bound;
+    */
+    while(bound > 0) {
+        bound = random_between(bound);
+    }
+}
+
+/*@
+  requires 0 < child;
+  assigns \nothing;
+  ensures 0 <= \result < child;
+*/
+size_t test_heap_array_traversal_next(size_t child) {
+    return (child - 1) / 2;
+}
+
+/*@
+    requires 0 <= bound < size;
+*/
+void test_heap_array_traversal(size_t bound, size_t size){
+    // size_t i = bound;
+    /*@
+        loop invariant 0 <= bound < size;
+        loop assigns bound;
+        loop variant bound;
+    */
+    while(bound > 0) {
+        bound = test_heap_array_traversal_next(bound);
+    }
+}
+
+/*@
+  requires 0 < child;
+  assigns \nothing;
+  ensures 0 <= \result < child;
+*/
+size_t testHeapArrayTraversalNext(size_t child) {
+    return (child - 1) / 2;
+}
+
+/*@
+    requires 0 <= bound < size;
+*/
+void testHeapArrayTraversal(size_t bound, size_t size){
+    // size_t i = bound;
+    /*@
+        loop invariant 0 <= bound < size;
+        loop assigns bound;
+        loop variant bound;
+    */
+    while(bound > 0) {
+        bound = test_heap_array_traversal_next(bound);
+    }
 }

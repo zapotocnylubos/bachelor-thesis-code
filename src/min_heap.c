@@ -774,15 +774,19 @@ size_t testHeapArrayTraversalNext(size_t child) {
 
 /*@
     requires 0 <= bound < size;
+    requires \valid(arr) && \valid(arr + (0..size-1));
+    assigns arr[0..size-1];
 */
-void testHeapArrayTraversal(size_t bound, size_t size){
+void testHeapArrayTraversal(size_t bound, size_t size, int *arr){
     // size_t i = bound;
+    int a = 0;
     /*@
         loop invariant 0 <= bound < size;
-        loop assigns bound;
+        loop assigns bound, arr[0..size-1];
         loop variant bound;
     */
     while(bound > 0) {
         bound = test_heap_array_traversal_next(bound);
+        arr[bound] = 0;
     }
 }

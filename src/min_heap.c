@@ -48,8 +48,13 @@ typedef struct {
 
     predicate HasBothChildren(Heap *heap, integer index) =
         HasLeftChild(heap, index) && HasRightChild(heap, index);
-
 */
+
+// /*@
+//     predicate HasHeapProperty(Heap *heap, integer parent, integer child) =
+//         IsDescendant(a, Parent(child), heap)
+//         && HeapElementValue(heap, ancestor) <= HeapElementValue(heap, element);
+// */
 
 /*@
     inductive IsDescendant(integer descendant, integer ancestor, Heap *heap) {
@@ -186,15 +191,19 @@ int HeapFindMin(Heap *heap) {
 }
 
 /*@
-    requires child >= 0;
+    requires \valid(heap) && 0 < HeapElementsCount(heap);
+    requires 0 < child < HeapElementsCount(heap);
 
     assigns \nothing;
 
     ensures \result == Parent(child);
-    ensures 0 <= \result;
+    ensures 0 <= \result < HeapElementsCount(heap);
 */
-int HeapParent(int child) {
-    return child == 0 ? child : (child - 1) / 2;
+int HeapParent(Heap *heap, int child) {
+    if (child <= 0 || child >= heap->elementsCount) {
+        exit(1);
+    }
+    return (child - 1) / 2;
 }
 
 /*@
@@ -216,34 +225,68 @@ int HeapRightChild(int parent) {
 }
 
 /*@
+    requires \valid(heap)
+        && 0 < HeapElementsCount(heap)
+        && \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
 
-    requires index >= 0;
-    // requires FilledHeap(heap);
+    requires 0 <= index < HeapElementsCount(heap);
+    
+    requires \forall integer ancestor, descendant;
+            0 <= ancestor < descendant < index
+            && IsDescendant(ancestor, descendant, heap) ==>
+                HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
+    
+    requires \forall integer ancestor, descendant;
+            index < ancestor < descendant < HeapElementsCount(heap)
+            && IsDescendant(ancestor, descendant, heap) ==>
+                HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
 
-    // decreases index;
-    // ensures FilledHeap{Post}(heap);
+
+    assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+
+    ensures \forall integer ancestor, descendant;
+            0 <= ancestor < descendant < HeapElementsCount(heap)
+            && IsDescendant(ancestor, descendant, heap) ==>
+                HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
 */
 void HeapBubbleUp(Heap *heap, int index) {
-    if (index == 0) {
-        return;
+    //@ assert \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap)-1));
+    if (!heap->elementsCount) {
+        exit(1);
     }
+    //@ assert \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap)-1));
+
+    // if (index == 0) {
+    //     return;
+    // }
 
     /*@
-        loop invariant 0 <= index;
-        loop invariant \forall integer i;
-            index < i < HeapElementsCount(heap)
-            && IsDescendant(i, index, heap) ==>
-                 HeapElementValue(heap, index) <= HeapElementValue(heap, i);
-        // loop invariant 0 <= index <= HeapElementsCount(heap);
+        loop invariant 0 <= index < HeapElementsCount(heap);
+
+        loop invariant \forall integer ancestor, descendant;
+            0 <= ancestor < descendant < index
+            && IsDescendant(ancestor, descendant, heap) ==>
+                HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
+
+        loop invariant \forall integer ancestor, descendant;
+            index < ancestor < descendant < HeapElementsCount(heap)
+            && IsDescendant(ancestor, descendant, heap) ==>
+                HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
+        
+        // loop invariant index > 0 ==> 0 <= Parent(index) < HeapElementsCount(heap);
+
         loop assigns index, HeapElements(heap)[0 .. HeapElementsCount(heap)-1];
         loop   variant index;
     */
     while (index > 0) {
-        int parent = HeapParent(index);
+        int parent = HeapParent(heap, index);
+        //@ assert 0 <= index < HeapElementsCount(heap);
         //@ assert 0 <= parent <= index;
+        //@ assert 0 <= parent < HeapElementsCount(heap);
+        // assert \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap)-1));
 
         if (heap->elements[parent] <= heap->elements[index]){
-            return;
+            break;
         }
 
         int tmp = heap->elements[parent];

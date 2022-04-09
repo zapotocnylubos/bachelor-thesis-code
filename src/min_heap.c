@@ -225,11 +225,11 @@ int HeapRightChild(int parent) {
 }
 
 /*@
-    requires 0 <= index < HeapElementsCount(heap);
 
     requires \valid(heap)
         //&& 0 < HeapElementsCount(heap)
         && \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires 0 <= index < HeapElementsCount(heap);
 
     
     // requires \forall integer ancestor, descendant;

@@ -30,7 +30,9 @@ services:
   frama-c-gui:
     image: framac/frama-c-gui:24.0
     restart: unless-stopped
-    command: frama-c-gui
+#    command: frama-c-gui -rte -eva src/min_heap.c
+#    command: frama-c-gui -rte src/min_heap.c
+    command: frama-c-gui -rte -wp-no-simpl src/min_heap.c
     volumes:
       - ./src:/home/opam/src
     environment:

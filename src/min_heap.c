@@ -6,7 +6,7 @@
 // Right child      2 * index + 2       2 * index + 1
 // Parent           (index - 1) / 2     index / 2
 
-typedef struct {
+typedef struct _Heap {
     int *elements;
     int elementsCount;
     int elementsCapacity;
@@ -199,7 +199,7 @@ int HeapFindMin(Heap *heap) {
     ensures \result == Parent(child);
     ensures 0 <= \result < child;
 */
-int HeapParent(Heap *heap, int child) {
+size_t HeapParent(struct _Heap *heap, int child) {
     if (child <= 0 || child >= heap->elementsCount) {
         exit(1);
     }
@@ -225,13 +225,10 @@ int HeapRightChild(int parent) {
 }
 
 /*@
+    requires \valid(heap) && \valid(heap->elements) && \valid(&heap->elementsCount);
+    requires 0 <= index < heap->elementsCount;
+    requires \valid(heap->elements + (0..heap->elementsCount - 1));
 
-    requires \valid(heap)
-        //&& 0 < HeapElementsCount(heap)
-        && \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
-    requires 0 <= index < HeapElementsCount(heap);
-
-    
     // requires \forall integer ancestor, descendant;
     //         0 <= ancestor < descendant < index
     //         && IsDescendant(ancestor, descendant, heap) ==>
@@ -242,30 +239,26 @@ int HeapRightChild(int parent) {
     //         && IsDescendant(ancestor, descendant, heap) ==>
     //             HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
 
-
-assigns \nothing;
-    // assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+    assigns heap->elements[0 .. heap->elementsCount - 1];
 
     // ensures \forall integer ancestor, descendant;
     //         0 <= ancestor < descendant < HeapElementsCount(heap)
     //         && IsDescendant(ancestor, descendant, heap) ==>
     //             HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
 */
-void HeapBubbleUp(Heap *heap, int index) {
-    heap->elements[index] = 0;
+void heap_bubble_up(struct _Heap *heap, int index) {
+    // heap->elements[index] = 0;
     int parent = index;
-    //@ assert \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap)-1));
-    if (!heap->elementsCount) {
-        exit(1);
-    }
-    //@ assert \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap)-1));
-
-    // if (index == 0) {
-    //     return;
+    // assert \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap)-1));
+    
+    // if (!heap->elementsCount) {
+    //     exit(1);
     // }
+    
+    // assert \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap)-1));
 
     /*@
-        loop invariant 0 <= index < HeapElementsCount(heap);
+        loop invariant 0 <= index < heap->elementsCount;
 
         // loop invariant \forall integer ancestor, descendant;
         //     0 <= ancestor < descendant < index
@@ -279,19 +272,20 @@ void HeapBubbleUp(Heap *heap, int index) {
         
         // loop invariant index > 0 ==> 0 <= Parent(index) < HeapElementsCount(heap);
 
-        loop assigns index, parent, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
-        loop   variant index;
+        loop assigns index, parent, heap->elements[0 .. HeapElementsCount(heap) - 1];
+        loop variant index;
     */
     while (index > 0) {
-        //heap->elements[index] = 0;
 
         // assert \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap)-1));
-        //@ assert 0 <= index < HeapElementsCount(heap);
+        // assert 0 <= index < HeapElementsCount(heap);
         parent = HeapParent(heap, index);
-        //@ assert 0 <= index < HeapElementsCount(heap);
-        //@ assert 0 <= parent <= index < HeapElementsCount(heap);
-        //@ assert 0 <= parent < index;
+        // assert 0 <= index < HeapElementsCount(heap);
+        // assert 0 <= parent <= index < HeapElementsCount(heap);
+        // assert 0 <= parent < index;
         // assert \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap)-1));
+        heap->elements[index] = 0;
+        heap->elements[parent] = 0;
 
         //heap->elements[parent] = 0;
         // if (heap->elements[index]){
@@ -308,7 +302,6 @@ void HeapBubbleUp(Heap *heap, int index) {
         // heap->elements[parent] = heap->elements[index];
         // heap->elements[index] = tmp;
 
-    // HeapBubbleUp(heap, parent);
         index = parent;
     }
 }
@@ -799,6 +792,34 @@ void testHeapArrayTraversal(int bound, int size, int *arr){
         loop invariant 0 <= bound < size;
         //loop invariant 0 <= parent < size;
         loop assigns bound, parent, arr[0..size-1];
+        loop variant bound;
+    */
+    while(bound > 0) {
+        parent = testHeapArrayTraversalNext(bound);
+        arr[bound] = 0;
+        arr[parent] = 0;
+        bound = parent;
+    }
+}
+
+/*@
+    requires 0 <= index < heap->elementsCount;
+    requires \valid(heap) 
+        && \valid(&heap->elementsCount) 
+        && \valid(heap->elements + (0..heap->elementsCount-1));
+    assigns heap->elements[0..heap->elementsCount-1];
+*/
+void testHeapStructTraversal(struct _Heap *heap, int index){
+    int bound = index;
+    //int size = heap->elementsCount; // Whaaat? needed variable???
+    // assert 0 <= bound < size;
+
+    int *arr = heap->elements;
+    int parent = bound;
+    /*@
+        loop invariant 0 <= bound < (heap->elementsCount);
+        //loop invariant 0 <= parent < (heap->elementsCount);
+        loop assigns bound, parent, arr[0..(heap->elementsCount)-1];
         loop variant bound;
     */
     while(bound > 0) {

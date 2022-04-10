@@ -356,57 +356,56 @@ void swap(int *a, int *b) {
 Heap testBubbleUpBrokenHeapRepair3(Heap heap, int index);
 
 /*@
-    // requires EmptyHeap(heap) || FilledHeap(heap);
-    // requires EmptyHeap(heap);
 
-    requires 0 <= HeapElementsCapacity(heap);
+    requires 0 < HeapElementsCount(heap) < HeapElementsCapacity(heap) < INT_MAX;
+    requires HeapElementsCount(heap) == HeapElementsCapacity(heap) ==> 2 * HeapElementsCount(heap) < INT_MAX;
+
+    requires \freeable(HeapElements(heap));
     requires \valid(HeapElements(heap));
-    requires HeapElements(heap) == \null || \freeable(HeapElements(heap));
-    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCapacity(heap) - 1));
+
     requires
         \forall integer element;
             0 < element < HeapElementsCount(heap) ==>
                 HeapElementValue(heap, Parent(element)) <= HeapElementValue(heap, element);
 
-    assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+    assigns HeapElements(heap)[0..HeapElementsCount(heap)];
 
     ensures count_increase: HeapElementsCount(\result) == HeapElementsCount(heap) + 1;
-    ensures count_bounded:  HeapElementsCount(\result) <= HeapElementsCapacity(\result);
+    // ensures count_bounded:  HeapElementsCount(\result) <= HeapElementsCapacity(\result);
 
-    ensures \forall integer element;
-            0 < element < HeapElementsCount(\result) ==>
-                HeapElementValue(\result, Parent(element)) <= HeapElementValue(\result, element);
+    // ensures \forall integer element;
+    //         0 < element < HeapElementsCount(\result) ==>
+    //             HeapElementValue(\result, Parent(element)) <= HeapElementValue(\result, element);
 */
-Heap HeapInsert(Heap heap, int element) {
+Heap HeapInsert9(Heap heap, int element) {
     int index = heap.elementsCount;
 
-    if (!heap.elements) {
-        heap.elementsCount = 0;
-        heap.elementsCapacity = 10;
-        heap.elements = (int *) malloc (10 * sizeof(int));
-        if (!heap.elements) {
-            exit(1);
-        }
-    }
+    // if (!heap.elementsCapacity) {
+    //     heap.elementsCount = 0;
+    //     heap.elementsCapacity = 10;
+    //     heap.elements = (int *) malloc (10 * sizeof(int));
+    //     if (!heap.elements) {
+    //         exit(1);
+    //     }
+    // }
 
-    if (heap.elementsCount + 1 >= heap.elementsCapacity) {
-        if (heap.elementsCapacity < INT_MAX / 2) {
-            heap.elementsCapacity = 2 * heap.elementsCount;
-        } else {
-            heap.elementsCapacity = INT_MAX;
-        }
+    // if (heap.elementsCount == heap.elementsCapacity) {
+    //     heap.elementsCapacity = 2 * heap.elementsCount;
 
-        heap.elements = (int *) realloc(heap.elements, heap.elementsCapacity * sizeof(int));
-        if (!heap.elements) {
-            exit(1);
-        }
-    }
+    //     heap.elements = (int *) realloc(heap.elements, heap.elementsCapacity * sizeof(int));
+    //     if (!heap.elements) {
+    //         exit(1);
+    //     }
+    //     // assert \valid(HeapElements(heap) + (0 .. HeapElementsCapacity(heap) - 1));
+    // }
 
     heap.elements[index] = element;
     heap.elementsCount++;
 
-    return testBubbleUpBrokenHeapRepair3(heap, index);
+    heap = testBubbleUpBrokenHeapRepair3(heap, index);
     // HeapBubbleUp(heap, index);
+    return heap;
 }
 
 /*@
@@ -1090,6 +1089,7 @@ predicate X3_U(Heap heap, integer index) =
 
     assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
 
+    ensures same_count: HeapElementsCount(\result) == HeapElementsCount(heap);
     ensures repaired_heap:
         \forall integer element;
             0 < element < HeapElementsCount(\result) ==>

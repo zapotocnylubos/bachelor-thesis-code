@@ -1122,13 +1122,13 @@ void testBubbleUpBrokenHeapRepair3(Heap heap, int index) {
 
         heap.elements[parent] = heap.elements[index];
 
-        //@ assert X3_L(heap, index);
-        //@ assert X3_U(heap, index);
+        // assert X3_L(heap, index);
+        // assert X3_U(heap, index);
 
         heap.elements[parent] = tmp;
         
-        //@ assert X3_L(heap, index);
-        //@ assert X3_U(heap, index);
+        // assert X3_L(heap, index);
+        // assert X3_U(heap, index);
 
         index = parent;
 

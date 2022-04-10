@@ -977,12 +977,14 @@ void testBubbleUpBrokenHeapRepair2(Heap heap, int index) {
         //             HeapElementValue(heap, Parent(element)) <= HeapElementValue(heap, element);
 
         loop assigns index, parent, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
-        loop variant index;
+        loop variant parent;
     */
-    while (index > 0) {
+    while (parent >= 0) {
         //@ assert HasLeftChild(heap, index) ==> HeapElementValue(heap, index) <= HeapElementValue(heap, LeftChild(index));
         //@ assert HasRightChild(heap, index) ==> HeapElementValue(heap, index) <= HeapElementValue(heap, RightChild(index));
-
+        
+        index = parent;
+        
         parent = HeapParent(heap, index);
 
         if (heap.elements[parent] <= heap.elements[index]) {
@@ -1013,7 +1015,7 @@ void testBubbleUpBrokenHeapRepair2(Heap heap, int index) {
                 HeapElementValue(heap, Parent(element)) <= HeapElementValue(heap, element);
         */
         heap.elements[parent] = heap.elements[index];
-        index = parent;
+        // index = parent;
         /*
         assert \forall integer element;
             0 < index < element < HeapElementsCount(heap) ==>
@@ -1038,5 +1040,99 @@ void testBubbleUpBrokenHeapRepair2(Heap heap, int index) {
         //@ assert HasRightChild(heap, index) ==> HeapElementValue(heap, index) <= HeapElementValue(heap, RightChild(index));
 
         index = parent;
+    }
+}
+
+
+/*@
+predicate X3_L(Heap heap, integer index) = 
+    \forall integer element;
+        0 < element < index ==>
+            HeapElementValue(heap, Parent(element)) <= HeapElementValue(heap, element);
+
+predicate X3_U(Heap heap, integer index) = 
+    \forall integer element;
+        index < element < HeapElementsCount(heap) ==>
+            HeapElementValue(heap, Parent(element)) <= HeapElementValue(heap, element);
+*/
+
+/*@
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires 0 < index < HeapElementsCount(heap);
+    
+    requires X3_L(heap, index);
+    requires X3_U(heap, index);
+
+
+    assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+
+    ensures repaired_heap:
+        \forall integer element;
+            0 < element < HeapElementsCount(heap) ==>
+                HeapElementValue(heap, Parent(element)) <= HeapElementValue(heap, element);
+*/
+void testBubbleUpBrokenHeapRepair3(Heap heap, int index) {
+    //@ assert X3_L(heap, index);
+    //@ assert X3_U(heap, index);
+
+    int parent = index;
+    
+    //@ assert X3_L(heap, index);
+    //@ assert X3_U(heap, index);
+
+    /*@
+        loop invariant 0 <= index < HeapElementsCount(heap);
+        loop invariant 0 <= parent <= index;
+
+        loop invariant X3_L(heap, index);
+        loop invariant X3_U(heap, index);
+
+        // ensures repaired_heap:
+        //     \forall integer element;
+        //         0 < element < HeapElementsCount(heap) ==>
+        //             HeapElementValue(heap, Parent(element)) <= HeapElementValue(heap, element);
+
+        loop assigns index, parent, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+        loop variant index;
+    */
+    while (index > 0) {
+        
+        //@ assert X3_L(heap, index);
+        //@ assert X3_U(heap, index);
+
+        parent = HeapParent(heap, index);
+        
+        //@ assert X3_L(heap, index);
+        //@ assert X3_U(heap, index);
+
+        if (heap.elements[parent] <= heap.elements[index]) {
+            //@ assert X3_L(heap, index);
+            //@ assert X3_U(heap, index);
+
+            break;
+        }
+        
+        //@ assert X3_L(heap, index);
+        //@ assert X3_U(heap, index);
+
+        int tmp = heap.elements[index];
+
+        //@ assert X3_L(heap, index);
+        //@ assert X3_U(heap, index);
+
+        heap.elements[parent] = heap.elements[index];
+
+        //@ assert X3_L(heap, index);
+        //@ assert X3_U(heap, index);
+
+        heap.elements[parent] = tmp;
+        
+        //@ assert X3_L(heap, index);
+        //@ assert X3_U(heap, index);
+
+        index = parent;
+
+        //@ assert X3_L(heap, index);
+        //@ assert X3_U(heap, index);
     }
 }

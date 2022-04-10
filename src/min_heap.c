@@ -250,37 +250,44 @@ int HeapRightChild(int parent) {
     requires 0 <= index < HeapElementsCount(heap);
 
     requires \forall integer ancestor, descendant;
-            0 <= ancestor < descendant < index
-            && IsDescendant(heap, ancestor, descendant) ==>
+            0 <= ancestor < descendant < HeapElementsCount(heap)
+            && IsDescendant(heap, descendant, ancestor) ==>
                 HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
+
+    // requires \forall integer ancestor, descendant;
+    //         0 <= ancestor < descendant <= index
+    //         && IsDescendant(heap, descendant, ancestor) ==>
+    //             HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
     
-    requires \forall integer ancestor, descendant;
-            index < ancestor < descendant < HeapElementsCount(heap)
-            && IsDescendant(heap, ancestor, descendant) ==>
-                HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
+    // requires \forall integer ancestor, descendant;
+    //         index <= ancestor < descendant < HeapElementsCount(heap)
+    //         && IsDescendant(heap, descendant, ancestor) ==>
+    //             HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
 
     assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
 
+    //assigns \nothing;
+
     ensures \forall integer ancestor, descendant;
             0 <= ancestor < descendant < HeapElementsCount(heap)
-            && IsDescendant(heap, ancestor, descendant) ==>
+            && IsDescendant(heap, descendant, ancestor) ==>
                 HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
 */
 void HeapBubbleUp(Heap heap, int index) {
-    int parent;
+    int parent = index;
     
     /*@
-        loop invariant 0 <= index < HeapElementsCount(heap);
+        loop invariant 0 <= parent <= index < HeapElementsCount(heap);
 
         loop invariant \forall integer ancestor, descendant;
             0 <= ancestor < descendant < index
-            && IsDescendant(heap, ancestor, descendant) ==>
+            && IsDescendant(heap, descendant, ancestor) ==>
                 HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
 
-        loop invariant \forall integer ancestor, descendant;
-            index < ancestor < descendant < HeapElementsCount(heap)
-            && IsDescendant(heap, ancestor, descendant) ==>
-                HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
+        // loop invariant \forall integer ancestor, descendant;
+        //     index <= ancestor < descendant < HeapElementsCount(heap)
+        //     && IsDescendant(heap, descendant, ancestor) ==>
+        //         HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
         
         loop assigns index, parent, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
         loop variant index;
@@ -288,25 +295,28 @@ void HeapBubbleUp(Heap heap, int index) {
     while (index > 0) {
         parent = HeapParent(heap, index);
         
-        heap.elements[index] = 0;
-        heap.elements[parent] = 0;
+        // heap.elements[index] = 0;
+        // heap.elements[parent] = 0;
 
-        //heap->elements[parent] = 0;
-        // if (heap->elements[index]){
-        //     index = parent;
-        //     continue;
-        // }
-
-        // if (heap->elements[parent] <= heap->elements[index]){
+        // if (heap.elements[parent] <= heap.elements[index]) {
         //     break;
         // }
 
-        // int tmp = heap->elements[parent];
-        // heap->elements[parent] = heap->elements[index];
-        // heap->elements[index] = tmp;
+        // swap (&heap.elements[parent], &heap.elements[index]);
 
         index = parent;
     }
+}
+
+/*@
+    requires \valid(a) && \valid(b);
+    assigns *a, *b;
+    ensures *a == \old(*b) && *b == \old(*a);
+*/
+void swap(int *a, int *b) {
+    int tmp = *a;
+    *a = *b;
+    *b = tmp;
 }
 
 /*@
@@ -650,101 +660,6 @@ void testHeapTraversal(Heap *heap) {
     */
     for (int i = 0; i < heap->elementsCount; i++) {
         printf("%d\n", heap->elements[i]);
-    }
-}
-
-/*@
-  requires \valid_read(a + (beg .. end-1));
-  requires beg < end;
-  assigns  \nothing;
-*/
-size_t min_idx_in(int* a, size_t beg, size_t end){
-    size_t min_i = beg;
-    /*@
-        loop invariant beg <= min_i < i <= end;
-        loop assigns min_i, i;
-        loop variant end-i;
-    */
-    for(size_t i = beg+1; i < end; ++i){
-        if(a[i] < a[min_i]) min_i = i; 
-    }
-    
-    return min_i; 
-}
-
-/*@
-  requires \valid_read(a + (beg .. end-1));
-  requires beg < end;
-  assigns  \nothing;
-*/
-size_t min_idx_in2(int* a, size_t beg, size_t end){
-    size_t min_i = end-1;
-    /*@
-        loop invariant (beg - 1) <= i < min_i <= end - 1;
-        loop assigns min_i, i;
-        loop variant (i-1) - beg;
-    */
-    for(size_t i = end-1-1; i >= beg; --i){
-        if(a[i] < a[min_i]) min_i = i; 
-    }
-    
-    return min_i; 
-}
-
-/*@
-  requires \valid(p) && \valid(q);
-  assigns  *p, *q;
-  ensures  *p == \old(*q) && *q == \old(*p);
-*/
-void swap(int* p, int* q){
-int tmp = *p; *p = *q; *q = tmp; }
-
-
-/*@
- requires \valid(v+(0..n-1));
- requires n > 0;
- assigns v[0..n-1];
- ensures \forall integer q; 0<=q<=n-1 ==> v[q]==(unsigned char)0;
-*/
-static void make_zero( unsigned char *v, size_t n ) {
-
-  unsigned char *p = (unsigned char*)v;
-
-  /*@
-    loop invariant 0 <= n <= \at(n, Pre);
-    //loop invariant p == v+(\at(n, Pre)-n);
-    //loop invariant \forall integer j;  0 <= j < (\at(n, Pre)-n) ==> v[j] == (unsigned char)0;
-    //loop assigns n, p, v[0..\at(n, Pre)-n-1];
-    loop variant n;
-  */
-
-  while( n-- ){
-    *p++ = 0;
-  }
-}
-
-
-/*@
-  requires 0 < child;
-  assigns \nothing;
-  ensures 0 <= \result < child;
-*/
-size_t random_between(size_t child) {
-    return (child - 1) / 2;
-}
-
-/*@
-    requires 0 <= bound < size;
-*/
-void random_loop(size_t bound, size_t size){
-    // size_t i = bound;
-    /*@
-        loop invariant 0 <= bound < size;
-        loop assigns bound;
-        loop variant bound;
-    */
-    while(bound > 0) {
-        bound = random_between(bound);
     }
 }
 

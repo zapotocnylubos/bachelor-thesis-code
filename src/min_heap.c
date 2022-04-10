@@ -1086,6 +1086,9 @@ predicate X3_U(Heap heap, integer index) =
     requires X3_L(heap, index);
     requires X3_U(heap, index);
 
+    requires HasLeftChild(heap, index) ==> HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, LeftChild(index));
+    requires HasRightChild(heap, index) ==> HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, RightChild(index));
+
 
     assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
 
@@ -1107,7 +1110,10 @@ Heap testBubbleUpBrokenHeapRepair3(Heap heap, int index) {
     /*@
         loop invariant 0 <= index < HeapElementsCount(heap);
         loop invariant 0 <= parent <= index;
+
         loop invariant HeapElementValue(heap, parent) <= HeapElementValue(heap, index);
+        loop invariant HasLeftChild(heap, index) ==> HeapElementValue(heap, parent) <= HeapElementValue(heap, LeftChild(index));
+        loop invariant HasRightChild(heap, index) ==> HeapElementValue(heap, parent) <= HeapElementValue(heap, RightChild(index));
 
         loop invariant X3_L(heap, index);
         loop invariant X3_U(heap, index);

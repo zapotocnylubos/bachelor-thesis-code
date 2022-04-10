@@ -1083,6 +1083,7 @@ void testBubbleUpBrokenHeapRepair3(Heap heap, int index) {
     /*@
         loop invariant 0 <= index < HeapElementsCount(heap);
         loop invariant 0 <= parent <= index;
+        loop invariant HeapElementValue(heap, parent) <= HeapElementValue(heap, index);
 
         loop invariant X3_L(heap, index);
         loop invariant X3_U(heap, index);
@@ -1096,7 +1097,6 @@ void testBubbleUpBrokenHeapRepair3(Heap heap, int index) {
         loop variant index;
     */
     while (index > 0) {
-        
         //@ assert X3_L(heap, index);
         //@ assert X3_U(heap, index);
 
@@ -1123,12 +1123,12 @@ void testBubbleUpBrokenHeapRepair3(Heap heap, int index) {
         heap.elements[parent] = heap.elements[index];
 
         // assert X3_L(heap, index);
-        // assert X3_U(heap, index);
+        //@ assert X3_U(heap, index);
 
         heap.elements[parent] = tmp;
         
         // assert X3_L(heap, index);
-        // assert X3_U(heap, index);
+        //@ assert X3_U(heap, index);
 
         index = parent;
 

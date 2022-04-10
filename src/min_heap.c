@@ -876,52 +876,63 @@ void testBubbleUpBrokenHeap(Heap heap, int index) {
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
     requires 0 <= index < HeapElementsCount(heap);
     
-    requires broken_path:
-        \forall integer ancestor, descendant;
-            0 <= ancestor < descendant < HeapElementsCount(heap)
-                //&& descendant != index
-                && IsDescendant(heap, descendant, ancestor) ==>
-                    HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
+    // requires T:
+    //     \forall integer ancestor, descendant;
+    //         0 <= ancestor < descendant < HeapElementsCount(heap)
+    //         && IsParent(ancestor, descendant) ==>
+    //             HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
 
-    requires t:
-        \forall integer x;
-            0 < x < 100 
-            && \exists integer y;
-            -100 < y < 0 ==>
-                y == -x;
+    requires \forall integer ancestor, descendant;
+        0 <= ancestor < Parent(index) <= descendant < HeapElementsCount(heap)
+        && IsParent(ancestor, descendant) ==>
+            HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
+
+    requires \forall integer ancestor, descendant;
+        Parent(index) < ancestor < descendant < HeapElementsCount(heap)
+        && IsParent(ancestor, descendant) ==>
+            HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
+
+    // requires t:
+    //     \forall integer x;
+    //         0 < x < 100 
+    //         && \exists integer y;
+    //         -100 < y < 0 ==>
+    //             y == -x;
 
     assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
 
     ensures repaired_heap:
         \forall integer ancestor, descendant;
-            0 <= ancestor <= descendant < HeapElementsCount(heap)
-            && IsDescendant(heap, descendant, ancestor) ==>
+            0 <= ancestor < descendant < HeapElementsCount(heap)
+            && IsParent(ancestor, descendant) ==>
                 HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
 */
 void testBubbleUpBrokenHeapRepair(Heap heap, int index) {
     //@ assert IsDescendant(heap, 2, 0);
+    //@ assert IsParent(0, 2);
     //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 2);
 
     //@ assert IsDescendant(heap, 5, 0);
-    //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 5);
+    // assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 5);
 
     //@ assert IsDescendant(heap, 6, 0);
-    //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 6);
+    // assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 6);
 
     //@ assert IsDescendant(heap, 11, 0);
-    //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 11);
+    // assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 11);
 
     //@ assert IsDescendant(heap, 12, 0);
-    //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 12);
+    // assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 12);
 
     //@ assert IsDescendant(heap, 13, 0);
-    //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 13);
+    // assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 13);
 
     //@ assert IsDescendant(heap, 14, 0);
-    //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 14);
+    // assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 14);
 
     //@ assert IsDescendant(heap, 20, 9);
-    // assert HeapElementValue(heap, 9) <= HeapElementValue(heap, 20);
+    //@ assert IsChild(20, 9);
+    //@ assert HeapElementValue(heap, 9) <= HeapElementValue(heap, 20);
 
     //@ assert IsDescendant(heap, 20, 4);
     // assert HeapElementValue(heap, 4) <= HeapElementValue(heap, 20);
@@ -931,6 +942,15 @@ void testBubbleUpBrokenHeapRepair(Heap heap, int index) {
     /*@
         loop invariant 0 <= parent <= index < HeapElementsCount(heap);
 
+        loop invariant \forall integer ancestor, descendant;
+            0 <= ancestor < Parent(index) <= descendant < HeapElementsCount(heap)
+            && IsParent(ancestor, descendant) ==>
+                HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
+
+        loop invariant \forall integer ancestor, descendant;
+            Parent(index) < ancestor < descendant < HeapElementsCount(heap)
+            && IsParent(ancestor, descendant) ==>
+                HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant);
 
         loop assigns index, parent, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
         loop variant index;

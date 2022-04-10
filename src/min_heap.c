@@ -809,7 +809,7 @@ void testHeapArrayTraversal(int bound, int size, int *arr){
         && \valid(heap->elements + (0..heap->elementsCount-1));
     assigns heap->elements[0..heap->elementsCount-1];
 */
-void testHeapStructTraversal(struct _Heap *heap, int index){
+void testHeapStructTraversalNotProvable(struct _Heap *heap, int index){
     int bound = index;
     //int size = heap->elementsCount; // Whaaat? needed variable???
     // assert 0 <= bound < size;
@@ -820,6 +820,62 @@ void testHeapStructTraversal(struct _Heap *heap, int index){
         loop invariant 0 <= bound < (heap->elementsCount);
         //loop invariant 0 <= parent < (heap->elementsCount);
         loop assigns bound, parent, arr[0..(heap->elementsCount)-1];
+        loop variant bound;
+    */
+    while(bound > 0) {
+        parent = testHeapArrayTraversalNext(bound);
+        arr[bound] = 0;
+        arr[parent] = 0;
+        bound = parent;
+    }
+}
+
+/*@
+    requires 0 <= index < heap.elementsCount;
+    requires \valid(heap.elements + (0..heap.elementsCount-1));
+    assigns heap.elements[0..heap.elementsCount-1];
+*/
+void testHeapStructTraversalProvableStack(struct _Heap heap, int index){
+    int bound = index;
+    //int size = heap->elementsCount; // Whaaat? needed variable???
+    // assert 0 <= bound < size;
+
+    int *arr = heap.elements;
+    int parent = bound;
+    /*@
+        loop invariant 0 <= bound < (heap.elementsCount);
+        //loop invariant 0 <= parent < (heap.elementsCount);
+        loop assigns bound, parent, arr[0..(heap.elementsCount)-1];
+        loop variant bound;
+    */
+    while(bound > 0) {
+        parent = testHeapArrayTraversalNext(bound);
+        arr[bound] = 0;
+        arr[parent] = 0;
+        bound = parent;
+    }
+}
+
+/*@
+    requires 0 <= index < heap->elementsCount;
+    requires \valid(heap) 
+        && \valid(&heap->elementsCount) 
+        && \valid(heap->elements + (0..heap->elementsCount-1));
+    assigns heap->elements[0..heap->elementsCount-1];
+*/
+void testHeapStructTraversalProvableGhost(struct _Heap *heap, int index){
+    int bound = index;
+    //int size = heap->elementsCount; // Whaaat? needed variable???
+    // assert 0 <= bound < size;
+
+    int *arr = heap->elements;
+    int parent = bound;
+    
+    //@ ghost int size = heap->elementsCount;
+    /*@
+        loop invariant 0 <= bound < (size);
+        //loop invariant 0 <= parent < (size);
+        loop assigns bound, parent, arr[0..(size)-1];
         loop variant bound;
     */
     while(bound > 0) {

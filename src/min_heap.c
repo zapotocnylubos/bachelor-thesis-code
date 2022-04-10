@@ -374,9 +374,9 @@ Heap testBubbleUpBrokenHeapRepair3(Heap heap, int index);
     ensures count_increase: HeapElementsCount(\result) == HeapElementsCount(heap) + 1;
     // ensures count_bounded:  HeapElementsCount(\result) <= HeapElementsCapacity(\result);
 
-    // ensures \forall integer element;
-    //         0 < element < HeapElementsCount(\result) ==>
-    //             HeapElementValue(\result, Parent(element)) <= HeapElementValue(\result, element);
+    ensures \forall integer element;
+        0 < element < HeapElementsCount(\result) ==>
+            HeapElementValue(\result, Parent(element)) <= HeapElementValue(\result, element);
 */
 Heap HeapInsert9(Heap heap, int element) {
     int index = heap.elementsCount;

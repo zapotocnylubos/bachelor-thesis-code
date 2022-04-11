@@ -356,12 +356,7 @@ void swap(int *a, int *b) {
 Heap testBubbleUpBrokenHeapRepair3(Heap heap, int index);
 
 /*@
-
-    requires 0 < HeapElementsCount(heap) < HeapElementsCapacity(heap) < INT_MAX;
-    requires HeapElementsCount(heap) == HeapElementsCapacity(heap) ==> 2 * HeapElementsCount(heap) < INT_MAX;
-
-    requires \freeable(HeapElements(heap));
-    requires \valid(HeapElements(heap));
+    requires 0 <= HeapElementsCount(heap) < HeapElementsCapacity(heap);
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCapacity(heap) - 1));
 
     requires
@@ -372,33 +367,14 @@ Heap testBubbleUpBrokenHeapRepair3(Heap heap, int index);
     assigns HeapElements(heap)[0..HeapElementsCount(heap)];
 
     ensures count_increase: HeapElementsCount(\result) == HeapElementsCount(heap) + 1;
-    // ensures count_bounded:  HeapElementsCount(\result) <= HeapElementsCapacity(\result);
+    ensures count_bounded:  HeapElementsCount(\result) <= HeapElementsCapacity(\result);
 
     ensures \forall integer element;
         0 < element < HeapElementsCount(\result) ==>
             HeapElementValue(\result, Parent(element)) <= HeapElementValue(\result, element);
 */
-Heap HeapInsert9(Heap heap, int element) {
+Heap HeapInsert(Heap heap, int element) {
     int index = heap.elementsCount;
-
-    // if (!heap.elementsCapacity) {
-    //     heap.elementsCount = 0;
-    //     heap.elementsCapacity = 10;
-    //     heap.elements = (int *) malloc (10 * sizeof(int));
-    //     if (!heap.elements) {
-    //         exit(1);
-    //     }
-    // }
-
-    // if (heap.elementsCount == heap.elementsCapacity) {
-    //     heap.elementsCapacity = 2 * heap.elementsCount;
-
-    //     heap.elements = (int *) realloc(heap.elements, heap.elementsCapacity * sizeof(int));
-    //     if (!heap.elements) {
-    //         exit(1);
-    //     }
-    //     // assert \valid(HeapElements(heap) + (0 .. HeapElementsCapacity(heap) - 1));
-    // }
 
     heap.elements[index] = element;
     heap.elementsCount++;
@@ -1081,13 +1057,13 @@ predicate X3_U(Heap heap, integer index) =
 
 /*@
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
-    requires 0 < index < HeapElementsCount(heap);
+    requires 0 <= index < HeapElementsCount(heap);
     
     requires X3_L(heap, index);
     requires X3_U(heap, index);
 
-    requires HasLeftChild(heap, index) ==> HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, LeftChild(index));
-    requires HasRightChild(heap, index) ==> HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, RightChild(index));
+    // requires HasLeftChild(heap, index) ==> HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, LeftChild(index));
+    // requires HasRightChild(heap, index) ==> HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, RightChild(index));
 
 
     assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
@@ -1167,4 +1143,18 @@ Heap testBubbleUpBrokenHeapRepair3(Heap heap, int index) {
     }
 
     return heap;
+}
+
+
+// Tak asi ne no
+//
+// frama-c-wp-manual
+// 1.6. LIMITATIONS & ROADMAP
+// Dynamic allocation. All implemented memory models are able to deal with dynamic allocation, which is actually used internally to manage the scope of local variables. However, ACSL clauses for specifying allocation and deallocation are not implemented yet (medium).
+/*@
+    requires \valid(arr+(0..size-1));
+    requires \freeable((void *)arr);
+*/
+int * my_realloc(int *arr, int size) {
+    return (int *) realloc(arr, 100);
 }

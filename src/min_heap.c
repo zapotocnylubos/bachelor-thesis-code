@@ -100,15 +100,16 @@ typedef struct _Heap {
     
     inductive IsDescendant(Heap heap, integer descendant, integer ancestor) {
         case children:
-            \forall Heap heap, integer child;
-                0 < child < HeapElementsCount(heap) ==>
-                    IsDescendant(heap, child, Parent(child));
+            \forall Heap heap, integer parent, child;
+                0 <= parent < child < HeapElementsCount(heap)
+                && IsParent(parent, child) ==>
+                    IsDescendant(heap, child, parent);
 
         case descendants:
-            \forall Heap heap, integer ancestor, element;
-                0 <= ancestor < element < HeapElementsCount(heap) ==>
-                    IsDescendant(heap, Parent(element), ancestor) ==> 
-                        IsDescendant(heap, element, ancestor);
+            \forall Heap heap, integer ancestor, parent, child;
+                0 <= ancestor < parent < child < HeapElementsCount(heap) ==>
+                    IsDescendant(heap, parent, ancestor) ==> 
+                        IsDescendant(heap, child, ancestor);
     }
 
 
@@ -214,6 +215,35 @@ typedef struct _Heap {
         \valid(heap)
         && HeapElementsCount(heap) == 0;
 */
+
+// ==============================================================================
+// ==============================================================================
+// ==============================================================================
+
+// /*@
+//     predicate HeapIsParent(Heap heap, integer parent, integer child) =
+//         0 <= parent < HeapElementsCount(heap)
+//         && 0 < child < HeapElementsCount(heap)
+//         && IsParent(parent, child);
+// */
+
+
+// /*@
+//     predicate ValidHeapProperty(Heap heap, integer ancestor, integer descendant) =
+//         \valid(HeapElements(heap) + ancestor)
+//         && \valid(HeapElements(heap) + descendant)
+//         && HeapIsParent(heap, ancestor, descendant)
+//         && HeapElementValue(heap, ancestor) <= HeapElementValue(heap, element);
+
+//     predicate ValidHeapStructure(Heap heap) =
+//         \forall integer element;
+//             0 < element < HeapElementsCount(heap) ==>
+
+// */
+
+// ==============================================================================
+// ==============================================================================
+// ==============================================================================
 
 /*@
     requires 0 < HeapElementsCount(heap);
@@ -360,21 +390,6 @@ void swap(int *a, int *b) {
 }
 
 Heap testBubbleUpBrokenHeapRepair3(Heap heap, int index);
-
-/*@
-    lemma root_minimum: \forall Heap heap;
-         HeapElementsCount(heap) == 1 && (
-            \forall integer element;
-                0 < element < HeapElementsCount(heap) ==>
-                    HeapElementValue(heap, Parent(element)) <= HeapElementValue(heap, element)
-        ) && (
-            \forall integer element;
-                0 < element < HeapElementsCount(heap) ==>
-                    IsDescendant(heap, element, 0)
-        ) ==> \forall integer element;
-                0 < element < HeapElementsCount(heap) ==>
-                    HeapElementValue(heap, 0) <= HeapElementValue(heap, element);
-*/
 
 /*@
     requires 0 <= HeapElementsCount(heap) < HeapElementsCapacity(heap);
@@ -1199,3 +1214,32 @@ void testHeapProperty(Heap heap) {
     //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 9);
     //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 10);
 }
+
+
+/*@
+    lemma test_root_minimum: \forall Heap heap;
+        0 <= HeapElementsCount(heap) < INT_MAX && (
+            \forall integer element;
+                0 < element < HeapElementsCount(heap) ==>
+                    HeapElementValue(heap, Parent(element)) <= HeapElementValue(heap, element)
+        ) ==> (
+            \forall integer ancestor, descendant;
+                0 <= ancestor < descendant < HeapElementsCount(heap) ==>
+                    IsParent(ancestor, descendant) ==>
+                        HeapElementValue(heap, ancestor) <= HeapElementValue(heap, descendant)
+        );
+
+    lemma test_root_minimum_1_5: \forall Heap heap;
+        HeapElementsCount(heap) == 4 ==>
+            IsDescendant(heap, 1, 0)
+            && IsDescendant(heap, 2, 0)
+            && IsDescendant(heap, 3, 0)
+        ;
+
+    lemma test_root_minimum_2: \forall Heap heap;
+        HeapElementsCount(heap) == 2 ==>
+            \forall integer descendant;
+                0 < descendant < HeapElementsCount(heap) ==>
+                    IsDescendant(heap, descendant, 0)
+        ;
+*/

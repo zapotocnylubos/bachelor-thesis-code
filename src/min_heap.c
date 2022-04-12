@@ -216,8 +216,16 @@ typedef struct _Heap {
 */
 
 /*@
-    requires FilledHeap(heap);
+    requires 0 < HeapElementsCount(heap);
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+
+    requires
+        \forall integer element;
+            0 < element < HeapElementsCount(heap) ==>
+                HeapElementValue(heap, Parent(element)) <= HeapElementValue(heap, element);
     
+    assigns \nothing;
+
     ensures \exists integer i;
         0 <= i < HeapElementsCount(heap) ==>
             \result == HeapElementValue(heap, i);
@@ -225,11 +233,9 @@ typedef struct _Heap {
     ensures \forall integer i;
         0 <= i < HeapElementsCount(heap) ==>
             \result <= HeapElementValue(heap, i);
-    
-    assigns \nothing;
 */
-int HeapFindMin(Heap *heap) {
-    return heap->elements[0];
+int HeapFindMin(Heap heap) {
+    return heap.elements[0];
 }
 
 /*@
@@ -356,6 +362,21 @@ void swap(int *a, int *b) {
 Heap testBubbleUpBrokenHeapRepair3(Heap heap, int index);
 
 /*@
+    lemma root_minimum: \forall Heap heap;
+         HeapElementsCount(heap) == 1 && (
+            \forall integer element;
+                0 < element < HeapElementsCount(heap) ==>
+                    HeapElementValue(heap, Parent(element)) <= HeapElementValue(heap, element)
+        ) && (
+            \forall integer element;
+                0 < element < HeapElementsCount(heap) ==>
+                    IsDescendant(heap, element, 0)
+        ) ==> \forall integer element;
+                0 < element < HeapElementsCount(heap) ==>
+                    HeapElementValue(heap, 0) <= HeapElementValue(heap, element);
+*/
+
+/*@
     requires 0 <= HeapElementsCount(heap) < HeapElementsCapacity(heap);
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCapacity(heap) - 1));
 
@@ -367,7 +388,8 @@ Heap testBubbleUpBrokenHeapRepair3(Heap heap, int index);
     assigns HeapElements(heap)[0..HeapElementsCount(heap)];
 
     ensures count_increase: HeapElementsCount(\result) == HeapElementsCount(heap) + 1;
-    ensures count_bounded:  HeapElementsCount(\result) <= HeapElementsCapacity(\result);
+    ensures capacity_unchanged:  HeapElementsCapacity(\result) == HeapElementsCapacity(heap);
+    // ensures count_bounded:  HeapElementsCount(\result) <= HeapElementsCapacity(\result);
 
     ensures \forall integer element;
         0 < element < HeapElementsCount(\result) ==>
@@ -603,7 +625,7 @@ int main() {
     printf("%d\n", HeapHasLeftChild(heap, 2));
 
     while (heap->elementsCount > 0) {
-        printf("%d\n", HeapFindMin(heap));
+        //printf("%d\n", HeapFindMin(heap));
         HeapExtractMin(heap);
     }
 }
@@ -1157,4 +1179,23 @@ Heap testBubbleUpBrokenHeapRepair3(Heap heap, int index) {
 */
 int * my_realloc(int *arr, int size) {
     return (int *) realloc(arr, 100);
+}
+
+/*@
+    requires HeapElementsCount(heap) > 10;
+    requires \forall integer element;
+                0 < element < HeapElementsCount(heap) ==>
+                    HeapElementValue(heap, Parent(element)) <= HeapElementValue(heap, element);
+*/
+void testHeapProperty(Heap heap) {
+    //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 1);
+    //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 2);
+    //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 3);
+    //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 4);
+    //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 5);
+    //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 6);
+    //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 7);
+    //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 8);
+    //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 9);
+    //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 10);
 }

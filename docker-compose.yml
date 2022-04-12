@@ -1,11 +1,9 @@
 version: '3.9'
 services:
   proxy:
-    image: traefik:v2.6.1
+    image: traefik:2.6.3
     restart: unless-stopped
     command:
-      # Enable traefik dashboard on port 8080
-      - "--api.insecure=true"
       # Dynamic configuration from docker engine
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
@@ -18,11 +16,10 @@ services:
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.websecure.http.tls=true"
     ports:
-      - "80:80"
-      - "443:443"
-      - "8080:8080"
+      - '80:80'
+      - '443:443'
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - '/var/run/docker.sock:/var/run/docker.sock:ro'
     depends_on:
       - frama-c-gui-novnc
       - vscode-server
@@ -32,7 +29,9 @@ services:
     restart: unless-stopped
 #    command: frama-c-gui -rte -eva src/min_heap.c
 #    command: frama-c-gui -rte src/min_heap.c
-    command: frama-c-gui -rte -wp-cache=none src/min_heap.c
+#    command: frama-c-gui -rte src/min_heap.c
+#    command: frama-c-gui -wp-skip-fct realloc src/min_heap.c # does not work, only first level function i suppose?
+    command: frama-c-gui -rte -wp-prover altergo,cvc4,z3 src/min_heap.c
     volumes:
       - ./src:/home/opam/src
     environment:

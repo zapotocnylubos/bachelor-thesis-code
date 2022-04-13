@@ -1309,6 +1309,8 @@ Heap testBubbleUpBrokenHeapRepair4(Heap heap, int index) {
     return heap;
 }
 
+
+//TODO lower child i pro toto a pouzit stejny predikat jako pri bubble up
 /*@
 predicate testBD1(Heap heap, integer index) = 
     \forall integer parent, child;
@@ -1338,24 +1340,31 @@ Heap testHeapBubbleDown(Heap heap, int index) {
 
     /*@
         loop invariant 0 <= index < HeapElementsCount(heap);
-        loop invariant index <= child < HeapElementsCount(heap);
+        // loop invariant index <= child < HeapElementsCount(heap);
 
         loop invariant testBD1(heap, index);
         loop assigns index, child, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
         loop variant HeapElementsCount(heap) - index;
     */
     while (HeapHasChild(heap, index)) {
+        //@ assert testBD1(heap, index);
         child = HeapLowerChild(heap, index);
+        //@ assert testBD1(heap, index);
 
         if (heap.elements[index] <= heap.elements[child]){
+        //@ assert testBD1(heap, index);
             break;
         }
+        //@ assert testBD1(heap, index);
 
         int tmp = heap.elements[child];
+        //@ assert testBD1(heap, index);
         heap.elements[child] = heap.elements[index];
+        // assert testBD1(heap, index);
         heap.elements[index] = tmp;
-
+        // assert testBD1(heap, index);
         index = child;
+        // assert testBD1(heap, index);
     }
 
     return heap;

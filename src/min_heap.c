@@ -389,16 +389,17 @@ void swap(int *a, int *b) {
     *b = tmp;
 }
 
-Heap testBubbleUpBrokenHeapRepair3(Heap heap, int index);
+Heap testBubbleUpBrokenHeapRepair4(Heap heap, int index);
 
 /*@
     requires 0 <= HeapElementsCount(heap) < HeapElementsCapacity(heap);
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCapacity(heap) - 1));
 
-    requires
-        \forall integer element;
-            0 < element < HeapElementsCount(heap) ==>
-                HeapElementValue(heap, Parent(element)) <= HeapElementValue(heap, element);
+    requires correct_heap: 
+        \forall integer parent, child;
+            0 <= parent < child < HeapElementsCount(heap)
+                && IsParent(parent, child) ==>
+                    HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
 
     assigns HeapElements(heap)[0..HeapElementsCount(heap)];
 
@@ -406,9 +407,11 @@ Heap testBubbleUpBrokenHeapRepair3(Heap heap, int index);
     ensures capacity_unchanged:  HeapElementsCapacity(\result) == HeapElementsCapacity(heap);
     // ensures count_bounded:  HeapElementsCount(\result) <= HeapElementsCapacity(\result);
 
-    ensures \forall integer element;
-        0 < element < HeapElementsCount(\result) ==>
-            HeapElementValue(\result, Parent(element)) <= HeapElementValue(\result, element);
+    ensures correct_heap:
+        \forall integer parent, child;
+            0 <= parent < child < HeapElementsCount(\result) ==>
+                IsParent(parent, child) ==>
+                    HeapElementValue(\result, parent) <= HeapElementValue(\result, child);
 */
 Heap HeapInsert(Heap heap, int element) {
     int index = heap.elementsCount;
@@ -416,7 +419,7 @@ Heap HeapInsert(Heap heap, int element) {
     heap.elements[index] = element;
     heap.elementsCount++;
 
-    heap = testBubbleUpBrokenHeapRepair3(heap, index);
+    heap = testBubbleUpBrokenHeapRepair4(heap, index);
     // HeapBubbleUp(heap, index);
     return heap;
 }
@@ -1243,3 +1246,53 @@ void testHeapProperty(Heap heap) {
                     IsDescendant(heap, descendant, 0)
         ;
 */
+
+
+
+/*@
+predicate testBU4(Heap heap, integer index) = 
+    \forall integer parent, child;
+        0 <= parent < child < HeapElementsCount(heap)
+            && child != index
+            && IsParent(parent, child) ==>
+                HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+*/
+
+/*@
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires 0 <= index < HeapElementsCount(heap);
+    
+    requires testBU4(heap, index);
+
+    assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+
+    ensures same_count: HeapElementsCount(\result) == HeapElementsCount(heap);
+    ensures repaired_heap:
+        \forall integer parent, child;
+            0 <= parent < child < HeapElementsCount(\result) ==>
+                IsParent(parent, child) ==>
+                    HeapElementValue(\result, parent) <= HeapElementValue(\result, child);
+*/
+Heap testBubbleUpBrokenHeapRepair4(Heap heap, int index) {
+    int parent;
+    
+    /*@
+        loop invariant 0 <= index < HeapElementsCount(heap);
+        loop invariant testBU4(heap, index);
+        loop assigns index, parent, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+        loop variant index;
+    */
+    while (index > 0) {
+        parent = HeapParent(heap, index);
+        if (heap.elements[parent] <= heap.elements[index]) {
+            break;
+        }
+        int tmp = heap.elements[index];
+        heap.elements[parent] = heap.elements[index];
+        heap.elements[parent] = tmp;
+
+        index = parent;
+    }
+
+    return heap;
+}

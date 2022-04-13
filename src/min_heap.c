@@ -61,6 +61,22 @@ typedef struct _Heap {
 */
 
 /*@
+    predicate HeapHasLeftChild(Heap heap, integer index) =
+        0 < LeftChild(index) < HeapElementsCount(heap);
+    
+    predicate HeapHasRightChild(Heap heap, integer index) =
+        0 < RightChild(index) < HeapElementsCount(heap);
+
+    predicate HeapHasChild(Heap heap, integer index) =
+        HeapHasLeftChild(heap, index)
+        || HeapHasRightChild(heap, index);
+
+    predicate HeapHasBothChildren(Heap heap, integer index) =
+        HeapHasLeftChild(heap, index) && HeapHasRightChild(heap, index);
+*/
+
+
+/*@
     predicate HasLeftChild(Heap heap, integer index) =
         LeftChild(index) < HeapElementsCount(heap);
     
@@ -425,138 +441,112 @@ Heap HeapInsert(Heap heap, int element) {
 }
 
 /*@
-    requires \valid(heap);
-    requires index >= 0;
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires 0 <= index < HeapElementsCount(heap);
 
     assigns \nothing;
 
-    behavior has_left_child:
-        assumes LeftChild(index) < HeapElementsCount(heap);
-        ensures \result == 1;
-
-    behavior has_no_left_child:
-        assumes LeftChild(index) >= HeapElementsCount(heap);
-        ensures \result == 0;
-    
-    complete behaviors;
-    disjoint behaviors;
+    ensures \result == LeftChild(index) < HeapElementsCount(heap);
 */
-int HeapHasLeftChild(Heap *heap, int index) {
-    return HeapLeftChild(index) < heap->elementsCount;
+int HeapHasLeftChild(Heap heap, int index) {
+    return HeapLeftChild(index) < heap.elementsCount;
 }
 
 /*@
-    requires \valid(heap);
-    requires index >= 0;
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires 0 <= index < HeapElementsCount(heap);
 
     assigns \nothing;
 
-    behavior has_right_child:
-        assumes RightChild(index) < HeapElementsCount(heap);
-        ensures \result == 1;
-
-    behavior has_no_right_child:
-        assumes RightChild(index) >= HeapElementsCount(heap);
-        ensures \result == 0;
-    
-    complete behaviors;
-    disjoint behaviors;
+    ensures \result == RightChild(index) < HeapElementsCount(heap);
 */
-int HeapHasRightChild(Heap *heap, int index) {
-    return HeapRightChild(index) < heap->elementsCount;
+int HeapHasRightChild(Heap heap, int index) {
+    return HeapRightChild(index) < heap.elementsCount;
 }
 
 /*@
-    requires \valid(heap);
-    requires index >= 0;
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires 0 <= index < HeapElementsCount(heap);
 
     assigns \nothing;
 
     behavior has_child:
-        assumes LeftChild(index) < HeapElementsCount(heap) 
-                || RightChild(index) < HeapElementsCount(heap);
+        assumes HeapHasChild(heap, index);
         ensures \result == 1;
 
-    behavior has_no_childen:
-        assumes LeftChild(index) >= HeapElementsCount(heap) 
-                && RightChild(index) >= HeapElementsCount(heap);
+    behavior has_no_child:
+        assumes !HeapHasChild(heap, index);
         ensures \result == 0;
-    
+
     complete behaviors;
     disjoint behaviors;
 */
-int HeapHasChild(Heap *heap, int index) {
+int HeapHasChild(Heap heap, int index) {
     return HeapHasLeftChild(heap, index) || HeapHasRightChild(heap, index);
 }
 
 /*@
-    requires \valid(heap);
-    requires index >= 0;
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires 0 <= index < HeapElementsCount(heap);
 
     assigns \nothing;
 
     behavior has_both_children:
-        assumes LeftChild(index) < HeapElementsCount(heap) 
-                && RightChild(index) < HeapElementsCount(heap);
+        assumes HeapHasBothChildren(heap, index);
         ensures \result == 1;
 
     behavior has_less_children:
-        assumes LeftChild(index) >= HeapElementsCount(heap) 
-                || RightChild(index) >= HeapElementsCount(heap);
+        assumes !HeapHasBothChildren(heap, index);
         ensures \result == 0;
     
     complete behaviors;
     disjoint behaviors;
 */
-int HeapHasBothChildren(Heap *heap, int index) {
+int HeapHasBothChildren(Heap heap, int index) {
     return HeapHasLeftChild(heap, index) && HeapHasRightChild(heap, index);
 }
 
 /*@
-    requires \valid(heap);
-    requires index >= 0;
-    requires LeftChild(index) < HeapElementsCount(heap)
-             || RightChild(index) < HeapElementsCount(heap);
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires 0 <= index < HeapElementsCount(heap);
+    requires HeapHasChild(heap, index);
 
     assigns \nothing;
 
     behavior has_both_children_left_lower:
-        assumes LeftChild(index) < HeapElementsCount(heap) 
-                && RightChild(index) < HeapElementsCount(heap)
+        assumes HeapHasBothChildren(heap, index)
                 && HeapElementValue(heap, LeftChild(index)) < HeapElementValue(heap, RightChild(index));
         ensures \result == LeftChild(index);
 
     behavior has_both_children_right_lower:
-        assumes LeftChild(index) < HeapElementsCount(heap) 
-                && RightChild(index) < HeapElementsCount(heap)
+        assumes HeapHasBothChildren(heap, index)
                 && HeapElementValue(heap, RightChild(index)) < HeapElementValue(heap, LeftChild(index));
         ensures \result == RightChild(index);
 
     behavior has_both_children_same:
-        assumes LeftChild(index) < HeapElementsCount(heap) 
-                && RightChild(index) < HeapElementsCount(heap)
+        assumes HeapHasBothChildren(heap, index)
                 && HeapElementValue(heap, LeftChild(index)) == HeapElementValue(heap, RightChild(index));
         ensures \result == LeftChild(index);
 
     behavior has_only_left_child:
-        assumes LeftChild(index) < HeapElementsCount(heap) 
-                && RightChild(index) >= HeapElementsCount(heap);
+        assumes !HeapHasBothChildren(heap, index)
+                && HeapHasLeftChild(heap, index);
         ensures \result == LeftChild(index);
 
     behavior has_only_right_child:
-        assumes RightChild(index) < HeapElementsCount(heap) 
-                && LeftChild(index) >= HeapElementsCount(heap);
+        assumes !HeapHasBothChildren(heap, index)
+                && HeapHasRightChild(heap, index);
         ensures \result == RightChild(index);
     
     complete behaviors;
     disjoint behaviors;
 */
-int HeapGetLowerChild(Heap *heap, int index) {
+int HeapLowerChild(Heap heap, int index) {
     int leftChild = HeapLeftChild(index);
     int rightChild = HeapRightChild(index);
 
     if (HeapHasBothChildren(heap, index)) {
-        if (heap->elements[leftChild] <= heap->elements[rightChild]) {
+        if (heap.elements[leftChild] <= heap.elements[rightChild]) {
             return leftChild;
         }
 
@@ -570,31 +560,53 @@ int HeapGetLowerChild(Heap *heap, int index) {
     return rightChild;
 }
 
-void HeapBubbleDown(Heap *heap, int index) {
+void HeapBubbleDown(Heap heap, int index) {
     while (HeapHasChild(heap, index)) {
-        int child = HeapGetLowerChild(heap, index);
+        int child = HeapLowerChild(heap, index);
 
-        if (heap->elements[index] <= heap->elements[child]){
+        if (heap.elements[index] <= heap.elements[child]){
             return;
         }
 
-        int tmp = heap->elements[child];
-        heap->elements[child] = heap->elements[index];
-        heap->elements[index] = tmp;
+        int tmp = heap.elements[child];
+        heap.elements[child] = heap.elements[index];
+        heap.elements[index] = tmp;
 
         index = child;
     }
 }
 
-void HeapExtractMin(Heap *heap) {
-    int last = heap->elementsCount - 1;
+Heap testHeapBubbleDown(Heap heap, int index);
 
-    int tmp = heap->elements[0];
-    heap->elements[0] = heap->elements[last];
-    heap->elements[last] = tmp;
+/*@
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCapacity(heap) - 1));
 
-    heap->elementsCount--;
-    HeapBubbleDown(heap, 0);
+    requires correct_heap: 
+        \forall integer parent, child;
+            0 <= parent < child < HeapElementsCount(heap)
+                && IsParent(parent, child) ==>
+                    HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+
+    assigns HeapElements(heap)[0..HeapElementsCount(heap)];
+
+    ensures count_decrease: HeapElementsCount(\result) == HeapElementsCount(heap) - 1;
+    ensures capacity_unchanged:  HeapElementsCapacity(\result) == HeapElementsCapacity(heap);
+
+    ensures correct_heap:
+        \forall integer parent, child;
+            0 <= parent < child < HeapElementsCount(\result) ==>
+                IsParent(parent, child) ==>
+                    HeapElementValue(\result, parent) <= HeapElementValue(\result, child);
+*/
+Heap HeapExtractMin(Heap heap) {
+    int last = heap.elementsCount - 1;
+
+    int tmp = heap.elements[0];
+    heap.elements[0] = heap.elements[last];
+    heap.elements[last] = tmp;
+
+    heap.elementsCount--;
+    return testHeapBubbleDown(heap, 0);
 }
 
 /*@
@@ -638,13 +650,13 @@ int main() {
     // HeapInsert(heap, 10);
     // HeapInsert(heap, 10);
 
-    printf("%d\n", HeapHasLeftChild(heap, 0));
-    printf("%d\n", HeapHasLeftChild(heap, 1));
-    printf("%d\n", HeapHasLeftChild(heap, 2));
+    // printf("%d\n", HeapHasLeftChild(heap, 0));
+    // printf("%d\n", HeapHasLeftChild(heap, 1));
+    // printf("%d\n", HeapHasLeftChild(heap, 2));
 
     while (heap->elementsCount > 0) {
         //printf("%d\n", HeapFindMin(heap));
-        HeapExtractMin(heap);
+        //HeapExtractMin(heap);
     }
 }
 
@@ -1292,6 +1304,58 @@ Heap testBubbleUpBrokenHeapRepair4(Heap heap, int index) {
         heap.elements[parent] = tmp;
 
         index = parent;
+    }
+
+    return heap;
+}
+
+/*@
+predicate testBD1(Heap heap, integer index) = 
+    \forall integer parent, child;
+        0 <= parent < child < HeapElementsCount(heap)
+            && parent != index
+            && IsParent(parent, child) ==>
+                HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+*/
+
+/*@
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires 0 <= index < HeapElementsCount(heap);
+
+    requires testBD1(heap, index);
+
+    assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+
+    ensures same_count: HeapElementsCount(\result) == HeapElementsCount(heap);
+    ensures repaired_heap:
+        \forall integer parent, child;
+            0 <= parent < child < HeapElementsCount(\result) ==>
+                IsParent(parent, child) ==>
+                    HeapElementValue(\result, parent) <= HeapElementValue(\result, child);
+*/
+Heap testHeapBubbleDown(Heap heap, int index) {
+    int child;
+
+    /*@
+        loop invariant 0 <= index < HeapElementsCount(heap);
+        loop invariant index <= child < HeapElementsCount(heap);
+
+        loop invariant testBD1(heap, index);
+        loop assigns index, child, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+        loop variant HeapElementsCount(heap) - index;
+    */
+    while (HeapHasChild(heap, index)) {
+        child = HeapLowerChild(heap, index);
+
+        if (heap.elements[index] <= heap.elements[child]){
+            break;
+        }
+
+        int tmp = heap.elements[child];
+        heap.elements[child] = heap.elements[index];
+        heap.elements[index] = tmp;
+
+        index = child;
     }
 
     return heap;

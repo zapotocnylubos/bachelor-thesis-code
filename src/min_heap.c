@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <limits.h>
+#include <math.h>
 
 //                  root at 0           root at 1
 // Left child       2 * index + 1       2 * index
@@ -636,31 +637,40 @@ Heap HeapExtractMin(Heap heap) {
 }
 
 /*@
-    ensures EmptyHeap(\result);
+    requires 0 <= elementsCount <= elementsCapacity;
+    requires \valid(elements + (0 .. elementsCount - 1));
+
+    ensures correct_heap:
+        \forall integer parent, child;
+            0 <= parent < child < HeapElementsCount(\result) ==>
+                IsParent(parent, child) ==>
+                    HeapElementValue(\result, parent) <= HeapElementValue(\result, child);
 */
-Heap *HeapBuild() {
-    Heap *heap = (Heap *) malloc(sizeof(Heap));
-    if (!heap) {
-        exit(1);
+Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity) {
+    Heap heap = {
+        .elements = elements,
+        .elementsCount = elementsCount,
+        .elementsCapacity = elementsCapacity
+    };
+
+    for (int i = floor(heap.elementsCount / 2); i > 0; i--) {
+        heap = testHeapBubbleDown(heap, i);
     }
 
-    heap->elements = NULL;
-    heap->elementsCount = 0;
-    heap->elementsCapacity = 0;
     return heap;
 }
 
 int main() {
-    Heap *heap = HeapBuild();
+    Heap heap = HeapBuild(NULL, 0, 0);
 
     
     // HeapInsert(heap, 3);
     // HeapInsert(heap, 2);
     // HeapInsert(heap, 1);
 
-    /*@ assert HeapValidSubtree(heap, 0); */
-    /*@ assert HeapValidSubtree(heap, 1); */
-    /*@ assert HeapValidSubtree(heap, 2); */
+    /* assert HeapValidSubtree(heap, 0); */
+    /* assert HeapValidSubtree(heap, 1); */
+    /* assert HeapValidSubtree(heap, 2); */
 
 
     // HeapInsert(heap, 10);
@@ -680,7 +690,7 @@ int main() {
     // printf("%d\n", HeapHasLeftChild(heap, 1));
     // printf("%d\n", HeapHasLeftChild(heap, 2));
 
-    while (heap->elementsCount > 0) {
+    while (heap.elementsCount > 0) {
         //printf("%d\n", HeapFindMin(heap));
         //HeapExtractMin(heap);
     }
@@ -1345,6 +1355,26 @@ predicate testBD1(Heap heap, integer lower) =
             && IsParent(parent, child) ==>
                 HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
 */
+
+/*@
+    requires HeapElementsCount(heap) == 10;
+    requires index == 0;
+
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires 0 <= index < HeapElementsCount(heap);
+
+    requires testBD1(heap, LeftChild(index));
+    requires testBD1(heap, RightChild(index));
+*/
+void testBD1(Heap heap, int index) { 
+    //@ assert \false;
+    //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 1);
+    //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 2);
+    //@ assert HeapElementValue(heap, 1) <= HeapElementValue(heap, 3);
+    //@ assert HeapElementValue(heap, 1) <= HeapElementValue(heap, 4);
+    //@ assert HeapElementValue(heap, 2) <= HeapElementValue(heap, 5);
+    //@ assert HeapElementValue(heap, 2) <= HeapElementValue(heap, 6);
+}
 
 /*@
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));

@@ -593,6 +593,8 @@ void HeapBubbleDown(Heap heap, int index) {
 Heap testHeapBubbleDown(Heap heap, int index);
 
 /*@
+    requires  HeapElementsCount(heap) == 2;
+    requires 0 < HeapElementsCount(heap) < HeapElementsCapacity(heap);
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCapacity(heap) - 1));
 
     requires correct_heap: 
@@ -620,7 +622,12 @@ Heap HeapExtractMin(Heap heap) {
     heap.elements[last] = tmp;
 
     heap.elementsCount--;
-    return testHeapBubbleDown(heap, 0);
+
+    if (0 < heap.elementsCount) {
+        return testHeapBubbleDown(heap, 0);
+    }
+
+    return heap;
 }
 
 /*@
@@ -1336,7 +1343,7 @@ predicate testBD1(Heap heap, integer lower) =
 
 /*@
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
-    requires 0 <= index < HeapInternalNodeCount(heap);
+    requires 0 <= index < HeapElementsCount(heap);
 
     requires testBD1(heap, LeftChild(index));
     requires testBD1(heap, RightChild(index));

@@ -34,7 +34,15 @@ typedef struct _Heap {
 */
 
 /*@
-    logic integer HeapInnternalNodeCount(Heap heap) = \floor(HeapElementsCount(heap) / 2);
+    logic integer LowerChild(Heap heap, integer index) =
+         (LeftChild(index) < HeapElementsCount(heap) && RightChild(index) < HeapElementsCount(heap)) ?
+            (HeapElementValue(heap, LeftChild(index)) <= HeapElementValue(heap, RightChild(index)) ? LeftChild(index) : RightChild(index)) :
+            (LeftChild(index) < HeapElementsCount(heap) ? LeftChild(index) : RightChild(index));
+*/
+
+
+/*@
+    logic integer HeapInternalNodeCount(Heap heap) = \floor(HeapElementsCount(heap) / 2);
     logic integer HeapExternalNodeCount(Heap heap) = \ceil(HeapElementsCount(heap) / 2);
 */
 
@@ -51,8 +59,6 @@ typedef struct _Heap {
     predicate IsParent(integer parent, integer child) =
         IsChild(child, parent);
 */
-
-
 
 /*@
     predicate HasLeftChild(Heap *heap, integer index) =
@@ -513,10 +519,13 @@ int HeapHasBothChildren(Heap heap, int index) {
 
 /*@
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
-    requires 0 <= index < HeapElementsCount(heap);
-    requires HeapHasChild(heap, index);
+    requires 0 <= index < HeapInternalNodeCount(heap);
+    // requires HeapHasChild(heap, index);
 
     assigns \nothing;
+
+    ensures HeapHasLeftChild(heap, index) ==> HeapElementValue(heap, \result) <= HeapElementValue(heap, LeftChild(index));
+    ensures HeapHasRightChild(heap, index) ==> HeapElementValue(heap, \result) <= HeapElementValue(heap, RightChild(index));
 
     behavior has_both_children_left_lower:
         assumes HeapHasBothChildren(heap, index)
@@ -1316,30 +1325,21 @@ Heap testBubbleUpBrokenHeapRepair4(Heap heap, int index) {
 
 
 //TODO lower child i pro toto a pouzit stejny predikat jako pri bubble up
-// /*@
-// predicate testBD1(Heap heap, integer index) = 
-//     \forall integer parent, child;
-//         0 <= parent < child < HeapElementsCount(heap)
-//             && parent != index
-//             && IsParent(parent, child) ==>
-//                 HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
-// */
+/*@
+predicate testBD1(Heap heap, integer lower) = 
+    \forall integer parent, child;
+        0 <= parent < child < HeapElementsCount(heap)
+            && child != lower
+            && IsParent(parent, child) ==>
+                HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+*/
 
 /*@
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
-    requires 0 <= index < HeapInnternalNodeCount(heap);
+    requires 0 <= index < HeapInternalNodeCount(heap);
 
-    requires HeapHasBothChildren(heap, index) && HeapElementValue(heap, LeftChild(index)) <= HeapElementValue(heap, RightChild(index)) ==>
-        testBU4(heap, LeftChild(index));
-
-    requires HeapHasBothChildren(heap, index) && HeapElementValue(heap, RightChild(index)) <= HeapElementValue(heap, LeftChild(index)) ==>
-        testBU4(heap, RightChild(index));
-
-    requires !HeapHasBothChildren(heap, index) && HeapHasLeftChild(heap, index) ==>
-         testBU4(heap, LeftChild(index));
-
-    requires !HeapHasBothChildren(heap, index) && HeapHasRightChild(heap, index) ==>
-         testBU4(heap, RightChild(index));
+    requires testBD1(heap, LeftChild(index));
+    requires testBD1(heap, RightChild(index));
 
     assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
 
@@ -1354,48 +1354,38 @@ Heap testHeapBubbleDown(Heap heap, int index) {
     int child;
 
     /*@
-        loop invariant 0 <= index < HeapInnternalNodeCount(heap);
-        // loop invariant index <= child < HeapElementsCount(heap);
+        loop invariant 0 <= index < HeapElementsCount(heap);
 
-        // loop invariant HeapHasBothChildren(heap, index) && HeapElementValue(heap, LeftChild(index)) <= HeapElementValue(heap, RightChild(index)) ==>
-        //     testBU4(heap, LeftChild(index));
-
-        // loop invariant HeapHasBothChildren(heap, index) && HeapElementValue(heap, RightChild(index)) <= HeapElementValue(heap, LeftChild(index)) ==>
-        //     testBU4(heap, RightChild(index));
-
-        // loop invariant !HeapHasBothChildren(heap, index) && HeapHasLeftChild(heap, index) ==>
-        //     testBU4(heap, LeftChild(index));
-
-        loop invariant !HeapHasBothChildren(heap, index) && HeapHasRightChild(heap, index) ==>
-            testBU4(heap, RightChild(index));
+        loop invariant testBD1(heap, LeftChild(index));
+        loop invariant testBD1(heap, RightChild(index));
 
         loop assigns index, child, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
         loop variant HeapElementsCount(heap) - index;
     */
-    while (index < heap.elementsCount) {
-        // assert testBD1(heap, index);
+    while (HeapHasChild(heap, index)) {
+        // assert testBD1(heap, LeftChild(index),  RightChild(index));
 
-        if (!HeapHasChild(heap, index)) {
-            break;
-        }
+        // if (!HeapHasChild(heap, index)) {
+        //     break;
+        // }
 
         child = HeapLowerChild(heap, index);
-        // assert testBD1(heap, index);
+        // assert testBD1(heap, LeftChild(index),  RightChild(index));
 
         if (heap.elements[index] <= heap.elements[child]){
-        // assert testBD1(heap, index);
+        // assert testBD1(heap, LeftChild(index),  RightChild(index));
             break;
         }
-        // assert testBD1(heap, index);
+        // assert testBD1(heap, LeftChild(index),  RightChild(index));
 
-        int tmp = heap.elements[child];
-        // assert testBD1(heap, index);
-        heap.elements[child] = heap.elements[index];
-        // assert testBD1(heap, index);
-        heap.elements[index] = tmp;
-        // assert testBD1(heap, index);
+        int tmp = heap.elements[index];
+        // assert testBD1(heap, LeftChild(index),  RightChild(index));
+        heap.elements[index] = heap.elements[child];
+        // assert testBD1(heap, LeftChild(index),  RightChild(index));
+        heap.elements[child] = tmp;
+        // assert testBD1(heap, LeftChild(index),  RightChild(index));
         index = child;
-        // assert testBD1(heap, index);
+        // assert testBD1(heap, LeftChild(index),  RightChild(index));
     }
 
     return heap;

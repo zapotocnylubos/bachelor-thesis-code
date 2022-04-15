@@ -276,10 +276,15 @@ typedef struct _Heap {
     requires 0 < HeapElementsCount(heap);
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
 
-    requires
-        \forall integer element;
-            0 < element < HeapElementsCount(heap) ==>
-                HeapElementValue(heap, Parent(element)) <= HeapElementValue(heap, element);
+    requires correct_heap:
+        \forall integer parent, child;
+            0 <= parent < child < HeapElementsCount(heap) ==>
+                IsParent(parent, child) ==>
+                    HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+    // requires
+    //     \forall integer element;
+    //         0 < element < HeapElementsCount(heap) ==>
+    //             HeapElementValue(heap, Parent(element)) <= HeapElementValue(heap, element);
     
     assigns \nothing;
 

@@ -2056,6 +2056,7 @@ Heap testHeapBubbleDown6(Heap heap, int index) {
         */
 
         //@ assert HeapElementValue(heap, child) < HeapElementValue(heap, index);
+        //@ assert HeapHasParent(heap, index) ==> HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, child);
         
         swap(heap.elements + index, heap.elements + child);
 

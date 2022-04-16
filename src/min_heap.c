@@ -1705,7 +1705,7 @@ predicate testBD4_L(Heap heap, integer index) =
 */
 
 /*@
-    requires HeapElementsCount(heap) == 4;
+    requires 2 < HeapElementsCount(heap) < 7;
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
     requires 0 <= index < HeapElementsCount(heap);
 

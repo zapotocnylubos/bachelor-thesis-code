@@ -2016,6 +2016,12 @@ Heap testHeapBubbleDown5(Heap heap, int index) {
     requires testBD6_U(heap, index);
     requires testBD6_L(heap, index);
 
+    requires HeapHasParent(heap, index) && HeapHasLeftChild(heap, index) ==> 
+        HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, LeftChild(index));
+
+    requires HeapHasParent(heap, index) && HeapHasRightChild(heap, index) ==> 
+        HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, RightChild(index));
+
     requires \forall integer parent, element, child;
                 0 <= parent < element < child < HeapElementsCount(heap) ==>
                     IsParent(element, child) 
@@ -2041,6 +2047,12 @@ Heap testHeapBubbleDown6(Heap heap, int index) {
 
         loop invariant testBD6_U(heap, index);
         loop invariant testBD6_L(heap, index);
+
+        loop invariant HeapHasParent(heap, index) && HeapHasLeftChild(heap, index) ==> 
+        HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, LeftChild(index));
+
+        loop invariant HeapHasParent(heap, index) && HeapHasRightChild(heap, index) ==> 
+        HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, RightChild(index));
 
         loop invariant \forall integer parent, element, child;
                 0 <= parent < element < child < HeapElementsCount(heap) ==>
@@ -2070,7 +2082,18 @@ Heap testHeapBubbleDown6(Heap heap, int index) {
                     HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
         */
 
-        //@ assert HeapHasParent(heap, index) ==> HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, child);
+
+        /*@ assert HeapHasParent(heap, index) ==> 
+            HeapElementValue(heap, Parent(index)) 
+                <= HeapElementValue(heap, index);
+        */
+
+        //@ assert HeapElementValue(heap, child) < HeapElementValue(heap, index);
+
+        //@ assert HeapHasParent(heap, index) ==> HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, index);
+
+        //@ assert HeapHasParent(heap, index) ==> HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, child) < HeapElementValue(heap, index);
+
         //@ assert HeapElementValue(heap, child) < HeapElementValue(heap, index);
         
         swap(heap.elements + index, heap.elements + child);
@@ -2093,6 +2116,8 @@ Heap testHeapBubbleDown6(Heap heap, int index) {
 
         //@ assert HeapHasLeftChild(heap, index) ==> HeapElementValue(heap, index) <= HeapElementValue(heap, LeftChild(index));
         //@ assert HeapHasRightChild(heap, index) ==> HeapElementValue(heap, index) <= HeapElementValue(heap, RightChild(index));
+
+        // assert \false;
 
         index = child;
     }

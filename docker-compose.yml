@@ -31,7 +31,7 @@ services:
 #    command: frama-c-gui -rte src/min_heap.c
 #    command: frama-c-gui -rte src/min_heap.c
 #    command: frama-c-gui -wp-skip-fct realloc src/min_heap.c # does not work, only first level function i suppose?
-    command: frama-c-gui -rte -wp-prover altergo,cvc4,z3 src/min_heap.c
+    command: frama-c-gui -rte -wp-prover altergo,cvc4,z3 -wp-timeout 30 src/min_heap.c
     volumes:
       - ./src:/home/opam/src
     environment:

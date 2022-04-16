@@ -73,6 +73,9 @@ typedef struct _Heap {
 */
 
 /*@
+    predicate HasParent(Heap heap, integer index) =
+        0 <= Parent(index) < HeapElementsCount(heap);
+
     predicate HeapHasLeftChild(Heap heap, integer index) =
         0 < LeftChild(index) < HeapElementsCount(heap);
     
@@ -1705,7 +1708,9 @@ predicate testBD4_L(Heap heap, integer index) =
 */
 
 /*@
-    requires 2 < HeapElementsCount(heap) < 7;
+    requires 0 < HeapElementsCount(heap);
+    //requires index == 1;
+
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
     requires 0 <= index < HeapElementsCount(heap);
 
@@ -1737,6 +1742,8 @@ Heap testHeapBubbleDown4(Heap heap, int index) {
     */
 
     if (HeapHasChild(heap, index)) {
+        //@ assert HeapHasLeftChild(heap, index) || HeapHasRightChild(heap, index);
+
         //@ assert testBD4_U(heap, index);
         //@ assert testBD4_L(heap, index);
         child = HeapLowerChild(heap, index);
@@ -1765,80 +1772,183 @@ Heap testHeapBubbleDown4(Heap heap, int index) {
         // assert testBD4_U(heap, index);
         // assert testBD4_L(heap, index);
 
+        /*@ assert \forall integer parent, child;
+            0 <= parent < child < HeapElementsCount(heap)
+                && parent == index
+                && IsParent(parent, child) ==>
+                    HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+        */
+
+        /*@ assert \forall integer parent, child;
+            0 <= parent < child < HeapElementsCount(heap)
+                && parent < index
+                && IsParent(parent, child) ==>
+                    HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+        */
+
         index = child;
         
-        //@ assert testBD4_U(heap, index); //!!!! tady je problem, nalezeno pomoci rezu
         //@ assert testBD4_L(heap, index);
+        //@ assert testBD4_U(heap, index); //!!!! tady je problem, nalezeno pomoci rezu
     }
 
-    if (HeapHasChild(heap, index)) {
-        //@ assert testBD4_U(heap, index);
-        //@ assert testBD4_L(heap, index);
+    // if (HeapHasChild(heap, index)) {
+    //     //@ assert HeapHasLeftChild(heap, index) || HeapHasRightChild(heap, index);
+        
+    //     //@ assert testBD4_U(heap, index);
+    //     //@ assert testBD4_L(heap, index);
+    //     child = HeapLowerChild(heap, index);
+    //     //@ assert testBD4_U(heap, index);
+    //     //@ assert testBD4_L(heap, index);
+
+    //     //@ assert 0 <= child < HeapElementsCount(heap);
+    //     //@ assert child == LeftChild(index) || child == RightChild(index);
+
+    //     //@ assert HeapHasLeftChild(heap, index) ==> HeapElementValue(heap, child) <= HeapElementValue(heap, LeftChild(index));
+    //     //@ assert HeapHasRightChild(heap, index) ==> HeapElementValue(heap, child) <= HeapElementValue(heap, RightChild(index));
+
+    //     if(heap.elements[index] <= heap.elements[child]) {
+    //         //@ assert testBD4_U(heap, index);
+    //         //@ assert testBD4_L(heap, index);
+    //         return heap;
+    //     }
+
+    //     //@ assert testBD4_U(heap, index);
+    //     //@ assert testBD4_L(heap, index);
+
+    //     swap(heap.elements + index, heap.elements + child);
+    //     //@ assert HeapHasLeftChild(heap, index) ==> HeapElementValue(heap, index) <= HeapElementValue(heap, LeftChild(index));
+    //     //@ assert HeapHasRightChild(heap, index) ==> HeapElementValue(heap, index) <= HeapElementValue(heap, RightChild(index));
+
+    //     // assert testBD4_U(heap, index);
+    //     // assert testBD4_L(heap, index);
+
+    //     index = child;
+        
+    //     //@ assert testBD4_U(heap, index); //!!!! tady je problem, nalezeno pomoci rezu
+    //     //@ assert testBD4_L(heap, index);
+    // }
+
+    // if (HeapHasChild(heap, index)) {
+    //     //@ assert HeapHasLeftChild(heap, index) || HeapHasRightChild(heap, index);
+        
+    //     //@ assert testBD4_U(heap, index);
+    //     //@ assert testBD4_L(heap, index);
+    //     child = HeapLowerChild(heap, index);
+    //     //@ assert testBD4_U(heap, index);
+    //     //@ assert testBD4_L(heap, index);
+
+    //     //@ assert 0 <= child < HeapElementsCount(heap);
+    //     //@ assert child == LeftChild(index) || child == RightChild(index);
+
+    //     //@ assert HeapHasLeftChild(heap, index) ==> HeapElementValue(heap, child) <= HeapElementValue(heap, LeftChild(index));
+    //     //@ assert HeapHasRightChild(heap, index) ==> HeapElementValue(heap, child) <= HeapElementValue(heap, RightChild(index));
+
+    //     if(heap.elements[index] <= heap.elements[child]) {
+    //         //@ assert testBD4_U(heap, index);
+    //         //@ assert testBD4_L(heap, index);
+    //         return heap;
+    //     }
+
+    //     //@ assert testBD4_U(heap, index);
+    //     //@ assert testBD4_L(heap, index);
+
+    //     swap(heap.elements + index, heap.elements + child);
+    //     //@ assert HeapHasLeftChild(heap, index) ==> HeapElementValue(heap, index) <= HeapElementValue(heap, LeftChild(index));
+    //     //@ assert HeapHasRightChild(heap, index) ==> HeapElementValue(heap, index) <= HeapElementValue(heap, RightChild(index));
+
+    //     // assert testBD4_U(heap, index);
+    //     // assert testBD4_L(heap, index);
+
+    //     index = child;
+        
+    //     //@ assert testBD4_U(heap, index); //!!!! tady je problem, nalezeno pomoci rezu
+    //     //@ assert testBD4_L(heap, index);
+    // }
+
+    return heap;
+}
+
+
+
+
+/*@ predicate testBD5(Heap heap, integer index) = 
+    \forall integer parent, child;
+        0 <= parent < child < HeapElementsCount(heap)
+            // && child != index
+            && child != LeftChild(index)
+            && child != RightChild(index)
+            && IsParent(parent, child) ==>
+                HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+*/
+
+/*@
+
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires 0 <= index < HeapElementsCount(heap);
+
+    requires testBD5(heap, index);
+
+    assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+
+    ensures same_count: HeapElementsCount(\result) == HeapElementsCount(heap);
+    ensures repaired_heap:
+        \forall integer parent, child;
+            0 <= parent < child < HeapElementsCount(\result) ==>
+                IsParent(parent, child) ==>
+                    HeapElementValue(\result, parent) <= HeapElementValue(\result, child);
+*/
+Heap testHeapBubbleDown5(Heap heap, int index) {
+    int child;
+
+    /*@
+        loop invariant 0 <= index < HeapElementsCount(heap);
+
+        loop invariant testBD5(heap, index);
+
+        loop assigns index, child, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+        loop variant HeapElementsCount(heap) - index;
+    */
+    while(HeapHasChild(heap, index)) {
         child = HeapLowerChild(heap, index);
-        //@ assert testBD4_U(heap, index);
-        //@ assert testBD4_L(heap, index);
 
-        //@ assert 0 <= child < HeapElementsCount(heap);
-        //@ assert child == LeftChild(index) || child == RightChild(index);
-
-        //@ assert HeapHasLeftChild(heap, index) ==> HeapElementValue(heap, child) <= HeapElementValue(heap, LeftChild(index));
-        //@ assert HeapHasRightChild(heap, index) ==> HeapElementValue(heap, child) <= HeapElementValue(heap, RightChild(index));
-
+        //@ assert testBD5(heap, index);
         if(heap.elements[index] <= heap.elements[child]) {
-            //@ assert testBD4_U(heap, index);
-            //@ assert testBD4_L(heap, index);
-            return heap;
+            //@ assert testBD5(heap, index);
+            break;
         }
 
-        //@ assert testBD4_U(heap, index);
-        //@ assert testBD4_L(heap, index);
+        //@ assert testBD5(heap, index);
+
+        /*@
+            assert \forall integer parent, child;
+                0 <= parent < child < HeapElementsCount(heap)
+                    && child == index
+                    && IsParent(parent, child) ==>
+                        HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+        */
 
         swap(heap.elements + index, heap.elements + child);
-        //@ assert HeapHasLeftChild(heap, index) ==> HeapElementValue(heap, index) <= HeapElementValue(heap, LeftChild(index));
-        //@ assert HeapHasRightChild(heap, index) ==> HeapElementValue(heap, index) <= HeapElementValue(heap, RightChild(index));
 
-        // assert testBD4_U(heap, index);
-        // assert testBD4_L(heap, index);
+        /*@
+            assert \forall integer parent, child;
+                0 <= parent < child < HeapElementsCount(heap)
+                    && child == index
+                    && IsParent(parent, child) ==>
+                        HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+        */
 
-        index = child;
-        
-        //@ assert testBD4_U(heap, index); //!!!! tady je problem, nalezeno pomoci rezu
-        //@ assert testBD4_L(heap, index);
-    }
-
-    if (HeapHasChild(heap, index)) {
-        //@ assert testBD4_U(heap, index);
-        //@ assert testBD4_L(heap, index);
-        child = HeapLowerChild(heap, index);
-        //@ assert testBD4_U(heap, index);
-        //@ assert testBD4_L(heap, index);
-
-        //@ assert 0 <= child < HeapElementsCount(heap);
-        //@ assert child == LeftChild(index) || child == RightChild(index);
-
-        //@ assert HeapHasLeftChild(heap, index) ==> HeapElementValue(heap, child) <= HeapElementValue(heap, LeftChild(index));
-        //@ assert HeapHasRightChild(heap, index) ==> HeapElementValue(heap, child) <= HeapElementValue(heap, RightChild(index));
-
-        if(heap.elements[index] <= heap.elements[child]) {
-            //@ assert testBD4_U(heap, index);
-            //@ assert testBD4_L(heap, index);
-            return heap;
-        }
-
-        //@ assert testBD4_U(heap, index);
-        //@ assert testBD4_L(heap, index);
-
-        swap(heap.elements + index, heap.elements + child);
-        //@ assert HeapHasLeftChild(heap, index) ==> HeapElementValue(heap, index) <= HeapElementValue(heap, LeftChild(index));
-        //@ assert HeapHasRightChild(heap, index) ==> HeapElementValue(heap, index) <= HeapElementValue(heap, RightChild(index));
-
-        // assert testBD4_U(heap, index);
-        // assert testBD4_L(heap, index);
+        /*@
+            assert \forall integer parent, child;
+                0 <= parent < child < HeapElementsCount(heap)
+                    && (child == LeftChild(index) || child == RightChild(index))
+                    && IsParent(parent, child) ==>
+                        HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+        */
+        //@ assert testBD5(heap, child);
 
         index = child;
-        
-        //@ assert testBD4_U(heap, index); //!!!! tady je problem, nalezeno pomoci rezu
-        //@ assert testBD4_L(heap, index);
+        //@ assert testBD5(heap, index);
     }
 
     return heap;

@@ -1998,6 +1998,17 @@ Heap testHeapBubbleDown5(Heap heap, int index) {
 */
 
 /*@
+    lemma heap_property_transitive:
+        \forall Heap heap, integer parent, element, child;
+                0 <= parent < element < child < HeapElementsCount(heap) ==>
+                    (IsParent(element, child) ==>
+                        HeapElementValue(heap, element) <= HeapElementValue(heap, child))
+                    && (IsParent(parent, element) ==>
+                        HeapElementValue(heap, parent) <= HeapElementValue(heap, element)) ==>
+                         HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+*/
+
+/*@
 
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
     requires 0 <= index < HeapElementsCount(heap);
@@ -2055,15 +2066,15 @@ Heap testHeapBubbleDown6(Heap heap, int index) {
                     HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
         */
 
+        //@ assert HeapHasParent(heap, index) ==> HeapElementValue(heap, child) < HeapElementValue(heap, Parent(index));
         //@ assert HeapElementValue(heap, child) < HeapElementValue(heap, index);
-        //@ assert HeapHasParent(heap, index) ==> HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, child);
         
         swap(heap.elements + index, heap.elements + child);
 
-        /*
+        /*@
             assert \forall integer parent, child;
                 0 <= parent < child < HeapElementsCount(heap)
-                && parent < index
+                && parent < Parent(index)
                 && IsParent(parent, child) ==>
                     HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
         */

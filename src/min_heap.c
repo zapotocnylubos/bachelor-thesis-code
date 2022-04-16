@@ -525,8 +525,8 @@ int HeapHasBothChildren(Heap heap, int index) {
 
 /*@
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
-    requires 0 <= index < HeapInternalNodeCount(heap);
-    // requires HeapHasChild(heap, index);
+    requires 0 <= index < HeapElementsCount(heap);
+    requires HeapHasChild(heap, index);
 
     assigns \nothing;
 
@@ -1428,6 +1428,343 @@ Heap testHeapBubbleDown(Heap heap, int index) {
         // assert testBD1(heap, LeftChild(index),  RightChild(index));
         index = child;
         // assert testBD1(heap, LeftChild(index),  RightChild(index));
+    }
+
+    return heap;
+}
+
+/*@
+predicate testBD2(Heap heap, integer lower, integer lower2) = 
+    \forall integer parent, child;
+        0 <= parent < child < HeapElementsCount(heap)
+            && child != lower
+            && child != lower2
+            && IsParent(parent, child) ==>
+                HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+*/
+
+/*@
+    requires HeapElementsCount(heap) == 5;
+    requires index == 0;
+
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires 0 <= index < HeapElementsCount(heap);
+
+    requires testBD2(heap, LeftChild(index), RightChild(index));
+
+    requires HeapElementValue(heap, 1) < HeapElementValue(heap, 0) || HeapElementValue(heap, 2) < HeapElementValue(heap, 0);
+
+    ensures HeapElementValue(\result, 0) <= HeapElementValue(\result, 1);
+    ensures HeapElementValue(\result, 0) <= HeapElementValue(\result, 2);
+*/
+Heap testBD2(Heap heap, int index) { 
+    // assert \false;
+    // assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 1);
+    // assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 2);
+    // assert HeapElementValue(heap, 1) <= HeapElementValue(heap, 3);
+    // assert HeapElementValue(heap, 1) <= HeapElementValue(heap, 4);
+    // assert HeapElementValue(heap, 2) <= HeapElementValue(heap, 5);
+    // assert HeapElementValue(heap, 2) <= HeapElementValue(heap, 6);
+
+    //@ assert HeapElementValue(heap, 1) < HeapElementValue(heap, 0) || HeapElementValue(heap, 2) < HeapElementValue(heap, 0);
+
+    int child;
+    if(heap.elements[1] <= heap.elements[2]) {
+        child = 1;
+        int tmp = heap.elements[1];
+        heap.elements[1] = heap.elements[0];
+        heap.elements[0] = tmp;
+    } else {
+        child = 2;
+        int tmp = heap.elements[2];
+        heap.elements[2] = heap.elements[0];
+        heap.elements[0] = tmp;
+    }
+
+    //  assert HeapElementValue{Pre}(heap, 1) <= HeapElementValue{Pre}(heap, 2) ==> HeapElementValue(heap, 0) <= HeapElementValue(heap, 1);
+    //  assert HeapElementValue{Pre}(heap, 1) <= HeapElementValue{Pre}(heap, 2) ==> HeapElementValue(heap, 0) <= HeapElementValue(heap, 2);
+
+    //  assert HeapElementValue{Pre}(heap, 2) <= HeapElementValue{Pre}(heap, 1) ==> HeapElementValue(heap, 0) <= HeapElementValue(heap, 1);
+    //  assert HeapElementValue{Pre}(heap, 2) <= HeapElementValue{Pre}(heap, 1) ==> HeapElementValue(heap, 0) <= HeapElementValue(heap, 2);
+
+    //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 1);
+    //@ assert HeapElementValue(heap, 0) <= HeapElementValue(heap, 2);
+
+    //@ assert  testBD2(heap, LeftChild(child), RightChild(child));
+
+    return heap;
+}
+
+
+/*@
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires 0 <= index < HeapElementsCount(heap);
+
+    requires testBD2(heap, LeftChild(index), RightChild(index));
+
+    assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+
+    ensures same_count: HeapElementsCount(\result) == HeapElementsCount(heap);
+    ensures repaired_heap:
+        \forall integer parent, child;
+            0 <= parent < child < HeapElementsCount(\result) ==>
+                IsParent(parent, child) ==>
+                    HeapElementValue(\result, parent) <= HeapElementValue(\result, child);
+*/
+Heap testHeapBubbleDown2(Heap heap, int index) {
+    int child;
+
+    /*@
+        loop invariant 0 <= index < HeapElementsCount(heap);
+
+        loop invariant testBD2(heap, LeftChild(index), RightChild(index));
+
+        loop assigns index, child, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+        loop variant HeapElementsCount(heap) - index;
+    */
+    while (HeapHasChild(heap, index)) {
+        child = HeapLowerChild(heap, index);
+
+        //@ assert HeapHasLeftChild(heap, index) ==> HeapElementValue(heap, child) <= HeapElementValue(heap, LeftChild(index));
+        //@ assert HeapHasRightChild(heap, index) ==> HeapElementValue(heap, child) <= HeapElementValue(heap, RightChild(index));
+
+        if (heap.elements[index] <= heap.elements[child]){
+            break;
+        }
+
+        //@ assert testBD2(heap, LeftChild(index), RightChild(index));
+        //@ assert HeapElementValue(heap, child) <= HeapElementValue(heap, index);
+
+        // assert HeapHasLeftChild(heap, index) ==> HeapElementValue(heap, index) <= HeapElementValue(heap, LeftChild(index));
+        // assert HeapHasRightChild(heap, index) ==> HeapElementValue(heap, index) <= HeapElementValue(heap, RightChild(index));
+
+        /*@ assert \forall integer parent, child;
+            0 <= parent < index < child < HeapElementsCount(heap)
+                && IsParent(parent, child) ==>
+                    HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+        */
+
+        /*@ assert \forall integer parent, child;
+            LeftChild(index) <= parent < child < HeapElementsCount(heap)
+                && IsParent(parent, child) ==>
+                    HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+        */
+
+        /*@ assert \forall integer parent, child;
+            RightChild(index) <= parent < child < HeapElementsCount(heap)
+                && IsParent(parent, child) ==>
+                    HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+        */
+
+        int tmp = heap.elements[index];
+        heap.elements[index] = heap.elements[child];
+        heap.elements[child] = tmp;
+
+        //@ assert HeapHasLeftChild(heap, index) ==> HeapElementValue(heap, index) <= HeapElementValue(heap, LeftChild(index));
+        //@ assert HeapHasRightChild(heap, index) ==> HeapElementValue(heap, index) <= HeapElementValue(heap, RightChild(index));
+
+        /*@ assert \forall integer parent, child2;
+            0 <= parent <= index < child2 < HeapElementsCount(heap)
+                && IsParent(parent, child2) ==>
+                    HeapElementValue(heap, parent) <= HeapElementValue(heap, child2);
+        */
+
+        /*@
+            assert \forall integer parent, child;
+                0 <= parent < child < HeapElementsCount(heap)
+                    && child == LeftChild(index)
+                    && child == RightChild(index)
+                    && IsParent(parent, child) ==>
+                        HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+        */
+
+        /*
+predicate testBD2(Heap heap, integer lower, integer lower2) = 
+    \forall integer parent, child;
+        0 <= parent < child < HeapElementsCount(heap)
+            && child != lower
+            && child != lower2
+            && IsParent(parent, child) ==>
+                HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+*/
+
+        // assert testBD2(heap, LeftChild(child), RightChild(child));
+
+        /* assert \forall integer parent, child;
+            0 <= parent <= LeftChild(index) < child < HeapElementsCount(heap)
+                && IsParent(parent, child) ==>
+                    HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+        */
+
+        /*@ assert \forall integer parent, child;
+            RightChild(index) <= parent < child < HeapElementsCount(heap)
+                && IsParent(parent, child) ==>
+                    HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+        */
+
+        // assert testBD2(heap, LeftChild(child), RightChild(child));
+
+        index = child;
+    }
+
+    return heap;
+}
+
+/*@
+predicate testBD3(Heap heap, integer index) = 
+    \forall integer parent, child;
+        0 <= parent < child < HeapElementsCount(heap)
+            && parent != index
+            && IsParent(parent, child) ==>
+                HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+*/
+
+
+/*@
+    requires HeapElementsCount(heap) == 9;
+    requires index == 0;
+    requires HeapElementValue(heap, 1) <= HeapElementValue(heap, 2) <=HeapElementValue(heap, 3) <=HeapElementValue(heap, 4) < HeapElementValue(heap, 0);
+    requires HeapElementValue(heap, 7) == HeapElementValue(heap, 8) == HeapElementValue(heap, 0);
+
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires 0 <= index < HeapElementsCount(heap);
+
+    requires testBD3(heap, index);
+
+    assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+
+    ensures same_count: HeapElementsCount(\result) == HeapElementsCount(heap);
+    ensures repaired_heap:
+        \forall integer parent, child;
+            0 <= parent < child < HeapElementsCount(\result) ==>
+                IsParent(parent, child) ==>
+                    HeapElementValue(\result, parent) <= HeapElementValue(\result, child);
+*/
+Heap testHeapBubbleDown3(Heap heap, int index) {
+    int child;
+    int leftChild;
+    int rightChild;
+    int tmp;
+
+    //@assert testBD3(heap, 0);
+    child = HeapLowerChild(heap, index);
+    //@ assert child == 1;
+
+    if (heap.elements[index] <= heap.elements[child]){
+        //@assert testBD3(heap, 0);
+        return heap;
+    }
+
+    tmp = heap.elements[index];
+    heap.elements[index] = heap.elements[child];
+    heap.elements[child] = tmp;
+
+    //@assert testBD3(heap, 1);
+    index = child;
+
+
+    
+    //@assert testBD3(heap, 1);
+    child = HeapLowerChild(heap, index);
+    //@ assert child == 3;
+
+
+    if (heap.elements[index] <= heap.elements[child]){
+        //@assert testBD3(heap, 1);
+        return heap;
+    }
+
+    tmp = heap.elements[index];
+    heap.elements[index] = heap.elements[child];
+    heap.elements[child] = tmp;
+
+    //@assert testBD3(heap, 3);
+    index = child;
+    //@assert testBD3(heap, 3);
+
+    //assert \false;
+
+    return heap;
+}
+
+
+/*@
+predicate testBD4_U(Heap heap, integer index) = 
+    \forall integer parent, child;
+        0 <= parent < child < HeapElementsCount(heap)
+            && parent < index
+            && IsParent(parent, child) ==>
+                HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+
+predicate testBD4_L(Heap heap, integer index) = 
+    \forall integer parent, child;
+        0 <= parent < child < HeapElementsCount(heap)
+            && parent > index
+            && IsParent(parent, child) ==>
+                HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+*/
+
+/*@
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires 0 <= index < HeapElementsCount(heap);
+
+    requires testBD4_U(heap, index);
+    requires testBD4_L(heap, index);
+
+    assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+
+    ensures same_count: HeapElementsCount(\result) == HeapElementsCount(heap);
+    ensures repaired_heap:
+        \forall integer parent, child;
+            0 <= parent < child < HeapElementsCount(\result) ==>
+                IsParent(parent, child) ==>
+                    HeapElementValue(\result, parent) <= HeapElementValue(\result, child);
+*/
+Heap testHeapBubbleDown4(Heap heap, int index) {
+    int child = index;
+
+    /*@
+        loop invariant 0 <= index < HeapElementsCount(heap);
+        loop invariant index <= child < HeapElementsCount(heap);
+
+        loop invariant testBD4_U(heap, index);
+        loop invariant testBD4_L(heap, index);
+
+        loop assigns index, child, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+        loop variant HeapElementsCount(heap) - index;
+    */
+    while (HeapHasChild(heap, index)) {
+        //@ assert testBD4_U(heap, index);
+        //@ assert testBD4_L(heap, index);
+        child = HeapLowerChild(heap, index);
+        //@ assert testBD4_U(heap, index);
+        //@ assert testBD4_L(heap, index);
+
+        //@ assert 0 <= child < HeapElementsCount(heap);
+
+        //@ assert HeapHasLeftChild(heap, index) ==> HeapElementValue(heap, child) <= HeapElementValue(heap, LeftChild(index));
+        //@ assert HeapHasRightChild(heap, index) ==> HeapElementValue(heap, child) <= HeapElementValue(heap, RightChild(index));
+
+        if(heap.elements[index] <= heap.elements[child]) {
+            //@ assert testBD4_U(heap, index);
+            //@ assert testBD4_L(heap, index);
+            break;
+        }
+
+        //@ assert testBD4_U(heap, index);
+        //@ assert testBD4_L(heap, index);
+
+        swap(heap.elements + index, heap.elements + child);
+        //@ assert HeapHasLeftChild(heap, index) ==> HeapElementValue(heap, index) <= HeapElementValue(heap, LeftChild(index));
+        //@ assert HeapHasRightChild(heap, index) ==> HeapElementValue(heap, index) <= HeapElementValue(heap, RightChild(index));
+
+        // assert testBD4_U(heap, index);
+        // assert testBD4_L(heap, index);
+
+        index = child;
+        
+        // assert testBD4_U(heap, index); !!!! tady je problem, nalezeno pomoci rezu
+        //@ assert testBD4_L(heap, index);
     }
 
     return heap;

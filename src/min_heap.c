@@ -335,7 +335,7 @@ int HeapLeftChild(int parent) {
 */
 int HeapRightChild(int parent) {
     return (2 * parent) + 2;
-}
+} // TODO inline
 
 /*@
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
@@ -641,7 +641,9 @@ Heap HeapExtractMin(Heap heap) {
 }
 
 /*@
-    requires 0 <= elementsCount <= elementsCapacity;
+    // requires 0 <= elementsCount <= elementsCapacity;
+    requires elementsCount == 10;
+    requires elementsCapacity == 1;
     requires \valid(elements + (0 .. elementsCount - 1));
 
     ensures correct_heap:
@@ -659,7 +661,7 @@ Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity) {
 
     Heap partial;
 
-    /*@
+    /*
         loop invariant 0 <= i < HeapElementsCount(heap);
 
         //loop invariant testBD6_U(heap, index);
@@ -672,13 +674,26 @@ Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity) {
         loop assigns i, partial, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
         loop variant i;
     */
-    for (int i = floor(heap.elementsCount / 2) - 1; i >= 0; i--) {
-        partial.elements = elements + i;
-        partial.elementsCount = elementsCount - i;
-        partial.elementsCapacity = elementsCapacity - i;
-        
-        heap = testHeapBubbleDown6(partial, i);
-    }
+
+    //@ assert 0 <= HeapElementsCount(heap);
+    int i = floor(heap.elementsCount / 2);
+
+    i -= 1;
+
+    partial.elements = elements + i;
+    partial.elementsCount = ceil(heap.elementsCount / 2) + 1;
+    partial.elementsCapacity = elementsCapacity; // TODO
+
+    /*@ assert \forall integer parent, child;
+            0 <= parent < child < HeapElementsCount(partial)
+            && parent > i
+            && IsParent(parent, child) ==>
+                HeapElementValue(partial, parent) <= HeapElementValue(partial, child);
+    
+    */
+    
+    heap = testHeapBubbleDown6(partial, i);
+    
 
     return heap;
 }

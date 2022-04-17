@@ -680,8 +680,11 @@ Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity) {
     //@ assert 10 == HeapElementsCount(heap);
     double a = heap.elementsCount / 2;
     //@ assert 5.0 == a;
-    int i = floor(a);
+    double b = floor(a);
+    //@ assert 5.0 == b;
 
+    int i = (int) b;
+    
     i -= 1;
 
     partial.elements = elements + i;

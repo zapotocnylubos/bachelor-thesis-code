@@ -646,6 +646,8 @@ Heap HeapExtractMin(Heap heap) {
     requires elementsCapacity == 1;
     requires \valid(elements + (0 .. elementsCount - 1));
 
+    assigns elements[0 .. elementsCount - 1];
+
     ensures correct_heap:
         \forall integer parent, child;
             0 <= parent < child < HeapElementsCount(\result) ==>
@@ -675,8 +677,10 @@ Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity) {
         loop variant i;
     */
 
-    //@ assert 0 <= HeapElementsCount(heap);
-    int i = floor(heap.elementsCount / 2);
+    //@ assert 10 == HeapElementsCount(heap);
+    double a = heap.elementsCount / 2;
+    //@ assert 5.0 == a;
+    int i = floor(a);
 
     i -= 1;
 

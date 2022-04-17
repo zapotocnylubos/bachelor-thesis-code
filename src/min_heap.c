@@ -640,7 +640,7 @@ Heap HeapExtractMin(Heap heap) {
     return heap;
 }
 
-/*
+/*@
     requires 0 <= elementsCount <= elementsCapacity;
     requires \valid(elements + (0 .. elementsCount - 1));
 
@@ -650,19 +650,38 @@ Heap HeapExtractMin(Heap heap) {
                 IsParent(parent, child) ==>
                     HeapElementValue(\result, parent) <= HeapElementValue(\result, child);
 */
-// Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity) {
-//     Heap heap = {
-//         .elements = elements,
-//         .elementsCount = elementsCount,
-//         .elementsCapacity = elementsCapacity
-//     };
+Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity) {
+    Heap heap = {
+        .elements = elements,
+        .elementsCount = elementsCount,
+        .elementsCapacity = elementsCapacity
+    };
 
-//     for (int i = floor(heap.elementsCount / 2); i > 0; i--) {
-//         heap = testHeapBubbleDown(heap, i);
-//     }
+    Heap partial;
 
-//     return heap;
-// }
+    /*@
+        loop invariant 0 <= i < HeapElementsCount(heap);
+
+        //loop invariant testBD6_U(heap, index);
+        loop invariant \forall integer parent, child;
+            0 <= parent < child < HeapElementsCount(heap)
+            && parent > i
+            && IsParent(parent, child) ==>
+                HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+
+        loop assigns i, partial, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+        loop variant i;
+    */
+    for (int i = floor(heap.elementsCount / 2) - 1; i >= 0; i--) {
+        partial.elements = elements + i;
+        partial.elementsCount = elementsCount - i;
+        partial.elementsCapacity = elementsCapacity - i;
+        
+        heap = testHeapBubbleDown6(partial, i);
+    }
+
+    return heap;
+}
 
 int main() {
     Heap heap = HeapBuild(NULL, 0, 0);

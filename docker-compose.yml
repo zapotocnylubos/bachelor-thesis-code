@@ -8,16 +8,17 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       # HTTP entrypotin and redirection to HTTPS
-      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.address=:8888"
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
       - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
       # HTTPS entrypoint
-      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.address=:8443"
       - "--entrypoints.websecure.http.tls=true"
     ports:
-      - '80:80'
-      - '443:443'
+      - "8888:8888"
+      - "8443:8443"
+      - "8089:8080"
     volumes:
       - '/var/run/docker.sock:/var/run/docker.sock:ro'
     depends_on:
@@ -52,7 +53,7 @@ services:
       - "traefik.http.routers.frama-c.rule=Host(`frama-c.${DOMAIN:-local}`)"
       - "traefik.http.routers.frama-c.entrypoints=websecure"
       - "traefik.http.routers.frama-c.middlewares=vnc-auto-resize"
-      - "traefik.http.middlewares.vnc-auto-resize.redirectregex.regex=^(https://frama-c.${DOMAIN:-local})/?$$"
+      - "traefik.http.middlewares.vnc-auto-resize.redirectregex.regex=^(https://frama-c.${DOMAIN:-local}:8443)/?$$"
       - 'traefik.http.middlewares.vnc-auto-resize.redirectregex.replacement=$${1}/vnc.html?resize=scale&autoconnect=1'
   
   vscode-server:

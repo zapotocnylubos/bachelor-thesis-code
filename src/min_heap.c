@@ -641,12 +641,14 @@ Heap HeapExtractMin(Heap heap) {
 }
 
 /*@
-    // requires 0 <= elementsCount <= elementsCapacity;
-    requires elementsCount == 10;
-    requires elementsCapacity == 1;
+    requires 0 <= elementsCount;
     requires \valid(elements + (0 .. elementsCount - 1));
 
-    assigns elements[0 .. elementsCount - 1];
+    // assigns HeapElements(\result)[0..HeapElementsCapacity(\result) - 1];
+    // assigns elements[0 .. elementsCount - 1];
+    // assigns HeapElements(\result)[0..HeapElementsCapacity(\result) - 1], elements[0 .. elementsCount - 1];
+    // assigns \nothing;
+    assigns __fc_heap_status; //, HeapElements(\result)[0..HeapElementsCapacity(\result) - 1], elements[0 .. elementsCount - 1];
 
     ensures correct_heap:
         \forall integer parent, child;
@@ -656,11 +658,22 @@ Heap HeapExtractMin(Heap heap) {
 */
 Heap HeapBuild(int *elements, int elementsCount) {
     Heap heap;
-    heap.elements = (int *) malloc (elementsCount * sizeof(int));
-    heap.elementsCount = 0;
-    heap.elementsCapacity = elementsCount;
 
-    /*@ 
+    heap.elementsCapacity = elementsCount;
+    heap.elements = (int *) malloc (heap.elementsCapacity * sizeof(int));
+    if (!heap.elements) {
+        exit(1);
+    }
+
+    //@ assert \valid(HeapElements(heap) + (0 .. HeapElementsCapacity(heap) - 1));
+
+    heap.elementsCount = 0;
+
+    for (int i = 0; i < elementsCount; i++) {
+        heap.elements[i] = elements[i];
+    }
+
+    /*
         loop invariant 0 <= i <= elementsCount;
 
         loop invariant \forall integer parent, child;
@@ -668,18 +681,22 @@ Heap HeapBuild(int *elements, int elementsCount) {
                 IsParent(parent, child) ==>
                     HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
 
-        loop assigns i, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
-        loop variant elementsCount - index;
+        loop assigns i, HeapElements(heap)[0 .. HeapElementsCapacity(heap) - 1];
+        loop variant elementsCount - i;
     */
-    for (int i = 0; i < elementsCount; i++) {
-        heap = HeapInsert(heap, elements[i]);
-    }
+    // for (int i = 0; i < elementsCount; i++) {
+    //     heap = HeapInsert(heap, elements[i]);
+    // }
     
     return heap;
 }
 
 int main() {
-    Heap heap = HeapBuild(NULL, 0, 0);
+    float a = 5.0f;
+    float b = floor(a);
+    int c = b;
+
+    Heap heap = HeapBuild(NULL, 0);
 
     
     // HeapInsert(heap, 3);

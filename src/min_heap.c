@@ -695,6 +695,7 @@ int main() {
     double a = 5.0f;
     //@ assert \is_finite(a);
     double b = floor(a);
+    //@ assert 0 < b < 10;
     int c = b;
 
     Heap heap = HeapBuild(NULL, 0);

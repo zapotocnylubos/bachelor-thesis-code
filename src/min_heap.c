@@ -654,54 +654,27 @@ Heap HeapExtractMin(Heap heap) {
                 IsParent(parent, child) ==>
                     HeapElementValue(\result, parent) <= HeapElementValue(\result, child);
 */
-Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity) {
-    Heap heap = {
-        .elements = elements,
-        .elementsCount = elementsCount,
-        .elementsCapacity = elementsCapacity
-    };
+Heap HeapBuild(int *elements, int elementsCount) {
+    Heap heap;
+    heap.elements = (int *) malloc (elementsCount * sizeof(int));
+    heap.elementsCount = 0;
+    heap.elementsCapacity = elementsCount;
 
-    Heap partial;
+    /*@ 
+        loop invariant 0 <= i <= elementsCount;
 
-    /*
-        loop invariant 0 <= i < HeapElementsCount(heap);
-
-        //loop invariant testBD6_U(heap, index);
         loop invariant \forall integer parent, child;
-            0 <= parent < child < HeapElementsCount(heap)
-            && parent > i
-            && IsParent(parent, child) ==>
-                HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+            0 <= parent < child < HeapElementsCount(heap) ==>
+                IsParent(parent, child) ==>
+                    HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
 
-        loop assigns i, partial, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
-        loop variant i;
+        loop assigns i, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+        loop variant elementsCount - index;
     */
-
-    //@ assert 10 == HeapElementsCount(heap);
-    double a = heap.elementsCount / 2;
-    //@ assert 5.0 == a;
-    double b = floor(a);
-    //@ assert 5.0 == b;
-
-    int i = (int) b;
+    for (int i = 0; i < elementsCount; i++) {
+        heap = HeapInsert(heap, elements[i]);
+    }
     
-    i -= 1;
-
-    partial.elements = elements + i;
-    partial.elementsCount = ceil(heap.elementsCount / 2) + 1;
-    partial.elementsCapacity = elementsCapacity; // TODO
-
-    /*@ assert \forall integer parent, child;
-            0 <= parent < child < HeapElementsCount(partial)
-            && parent > i
-            && IsParent(parent, child) ==>
-                HeapElementValue(partial, parent) <= HeapElementValue(partial, child);
-    
-    */
-    
-    heap = testHeapBubbleDown6(partial, i);
-    
-
     return heap;
 }
 
@@ -1288,8 +1261,8 @@ Heap testBubbleUpBrokenHeapRepair3(Heap heap, int index) {
     requires \valid(arr+(0..size-1));
     requires \freeable((void *)arr);
 */
-int * my_realloc(int *arr, int size) {
-    return (int *) realloc(arr, 100);
+void * my_realloc(int *arr, int size) {
+    return realloc(arr, 100);
 }
 
 /*@

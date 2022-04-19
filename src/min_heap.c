@@ -692,8 +692,9 @@ Heap HeapBuild(int *elements, int elementsCount) {
 }
 
 int main() {
-    float a = 5.0f;
-    float b = floor(a);
+    double a = 5.0f;
+    //@ assert \is_finite(a);
+    double b = floor(a);
     int c = b;
 
     Heap heap = HeapBuild(NULL, 0);

@@ -656,22 +656,15 @@ Heap HeapExtractMin(Heap heap) {
                 IsParent(parent, child) ==>
                     HeapElementValue(\result, parent) <= HeapElementValue(\result, child);
 */
-Heap HeapBuild(int *elements, int elementsCount) {
+Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity) {
     Heap heap;
-
+    heap.elements = elements;
+    heap.elementsCount = elementsCount;
     heap.elementsCapacity = elementsCount;
-    heap.elements = (int *) malloc (heap.elementsCapacity * sizeof(int));
-    if (!heap.elements) {
-        exit(1);
-    }
 
-    //@ assert \valid(HeapElements(heap) + (0 .. HeapElementsCapacity(heap) - 1));
 
     heap.elementsCount = 0;
 
-    // for (int i = 0; i < elementsCount; i++) {
-    //     heap.elements[i] = elements[i];
-    // }
 
     /*
         loop invariant 0 <= i <= elementsCount;
@@ -692,21 +685,29 @@ Heap HeapBuild(int *elements, int elementsCount) {
 }
 
 /*@
-    ensures INT_MIN <= x <= INT_MAX ==> INT_MIN <= \result <= INT_MAX;
+    ensures INT_MIN <= x <= INT_MAX ==>
+        INT_MIN <= \result <= INT_MAX;
 */
 extern double floor(double x);
+
+/*@
+    ensures INT_MIN <= x <= INT_MAX ==>
+        INT_MIN <= \result <= INT_MAX;
+*/
+extern double ceil(double x);
 
 int main() {
     double a = 5.0f;
 
     //@ assert \is_finite(a);
     double b = floor(a);
-    double e = round(a);
+    double e = ceil(a);
     // assert b == \floor(a);
     //int d = b;
     int c = b;
+    int i = e;
 
-    Heap heap = HeapBuild(NULL, 0);
+    Heap heap = HeapBuild(NULL, 0, 0);
 
     
     // HeapInsert(heap, 3);

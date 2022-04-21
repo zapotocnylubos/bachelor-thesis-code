@@ -695,10 +695,11 @@ int main() {
     double a = 5.0f;
 
     //@ assert \is_finite(a);
-    // double b = floor(a);
+    double b = floor(a);
+    double e = round(a);
     // assert b == \floor(a);
-    
-    int c = a;
+    //int d = b;
+    int c = e;
 
     Heap heap = HeapBuild(NULL, 0);
 

@@ -669,9 +669,9 @@ Heap HeapBuild(int *elements, int elementsCount) {
 
     heap.elementsCount = 0;
 
-    for (int i = 0; i < elementsCount; i++) {
-        heap.elements[i] = elements[i];
-    }
+    // for (int i = 0; i < elementsCount; i++) {
+    //     heap.elements[i] = elements[i];
+    // }
 
     /*
         loop invariant 0 <= i <= elementsCount;
@@ -691,6 +691,11 @@ Heap HeapBuild(int *elements, int elementsCount) {
     return heap;
 }
 
+/*@
+    ensures INT_MIN <= x <= INT_MAX ==> INT_MIN <= \result <= INT_MAX;
+*/
+extern double floor(double x);
+
 int main() {
     double a = 5.0f;
 
@@ -699,7 +704,7 @@ int main() {
     double e = round(a);
     // assert b == \floor(a);
     //int d = b;
-    int c = e;
+    int c = b;
 
     Heap heap = HeapBuild(NULL, 0);
 

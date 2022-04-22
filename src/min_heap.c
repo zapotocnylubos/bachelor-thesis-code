@@ -634,7 +634,7 @@ Heap HeapExtractMin(Heap heap) {
 
     if (0 < heap.elementsCount) {
         // return testHeapBubbleDown(heap, 0);
-        return testHeapBubbleDown6(heap, 0);
+        return testHeapBubbleDown6(heap, 0);  // TODO: netreba vracet heap z testHeapBubbleDown6
     }
 
     return heap;
@@ -648,7 +648,7 @@ Heap HeapExtractMin(Heap heap) {
     // assigns elements[0 .. elementsCount - 1];
     // assigns HeapElements(\result)[0..HeapElementsCapacity(\result) - 1], elements[0 .. elementsCount - 1];
     // assigns \nothing;
-    assigns __fc_heap_status; //, HeapElements(\result)[0..HeapElementsCapacity(\result) - 1], elements[0 .. elementsCount - 1];
+    assigns HeapElements(\result)[0..HeapElementsCapacity(\result) - 1];
 
     ensures correct_heap:
         \forall integer parent, child;
@@ -657,42 +657,41 @@ Heap HeapExtractMin(Heap heap) {
                     HeapElementValue(\result, parent) <= HeapElementValue(\result, child);
 */
 Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity) {
-    Heap heap;
+    Heap heap, partial;
     heap.elements = elements;
     heap.elementsCount = elementsCount;
-    heap.elementsCapacity = elementsCount;
+    heap.elementsCapacity = elementsCapacity;
 
+    /*@
+        loop invariant  i <= ((int)\floor(elementsCount / 2)) - 1;
 
-    heap.elementsCount = 0;
+        // loop invariant \forall integer parent, child;
+        //     0 <= parent < child < HeapElementsCount(heap)
+        //     && parent > i
+        //     && IsParent(parent, child) ==>
+        //         HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
 
-
-    /*
-        loop invariant 0 <= i <= elementsCount;
-
-        loop invariant \forall integer parent, child;
-            0 <= parent < child < HeapElementsCount(heap) ==>
-                IsParent(parent, child) ==>
-                    HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
-
-        loop assigns i, HeapElements(heap)[0 .. HeapElementsCapacity(heap) - 1];
-        loop variant elementsCount - i;
+        loop assigns i, partial.elements, partial.elementsCount, partial.elementsCapacity, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+        loop variant i;
     */
-    // for (int i = 0; i < elementsCount; i++) {
-    //     heap = HeapInsert(heap, elements[i]);
-    // }
+    for (int i = ((int)floor(elementsCount / 2)) - 1; i >= 0; i--) {
+        partial.elements = heap.elements + i;
+        partial.elementsCount = elementsCount - i;
+        partial.elementsCapacity = elementsCapacity;
+
+        testHeapBubbleDown6(partial, 0);
+    }
     
     return heap;
 }
 
 /*@
-    ensures INT_MIN <= x <= INT_MAX ==>
-        INT_MIN <= \result <= INT_MAX;
+    ensures \result == \floor(x);
 */
 extern double floor(double x);
 
 /*@
-    ensures INT_MIN <= x <= INT_MAX ==>
-        INT_MIN <= \result <= INT_MAX;
+    ensures \result == \ceil(x);
 */
 extern double ceil(double x);
 

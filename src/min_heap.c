@@ -116,6 +116,17 @@ typedef struct _Heap {
 // */
 
 /*@
+    predicate HasHeapProperty(Heap heap, integer parent, integer child) = 
+        HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+
+    predicate ValidHeap(Heap heap) = 
+        \forall integer parent, child;
+            0 <= parent < child < HeapElementsCount(heap)
+            && IsParent(parent, child) ==>
+                HasHeapProperty(heap, parent, child);
+*/
+
+/*@
     inductive IsDescendant(integer descendant, integer ancestor, Heap *heap) {
         case children:
             \forall integer child, Heap *heap;
@@ -2178,7 +2189,6 @@ Heap testHeapBubbleDown6(Heap heap, int index) {
 */
 
 /*@
-
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
     requires 0 <= index < HeapElementsCount(heap);
 
@@ -2186,33 +2196,25 @@ Heap testHeapBubbleDown6(Heap heap, int index) {
 
     assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
 
-    // ensures same_count: HeapElementsCount(\result) == HeapElementsCount(heap);
+    ensures partially_repaired_heap:
+        \forall integer parent, child;
+            0 <= parent < child < HeapElementsCount(\result)
+            && parent >= index
+            && IsParent(parent, child) ==>
+                HasHeapProperty(\result, parent, child);
 
     behavior full_repair:
         assumes HeapUpperCutParent(heap, index);
 
         assumes grandparent_heap_property_left_grandchild:
             HeapHasParent(heap, index) && HeapHasLeftChild(heap, index) ==> 
-                HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, LeftChild(index));
+                HasHeapProperty(heap, Parent(index), LeftChild(index));
 
         assumes grandparent_heap_property_right_grandchild:
             HeapHasParent(heap, index) && HeapHasRightChild(heap, index) ==> 
-                HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, RightChild(index));
+                HasHeapProperty(heap, Parent(index), RightChild(index));
 
-        ensures repaired_heap:
-            \forall integer parent, child;
-                0 <= parent < child < HeapElementsCount(\result)
-                && IsParent(parent, child) ==>
-                    HeapElementValue(\result, parent) <= HeapElementValue(\result, child);
-
-    behavior partial_repair:
-        ensures HeapLowerCutParent(\result, index);
-        ensures partially_repaired_heap:
-            \forall integer parent, child;
-                0 <= parent < child < HeapElementsCount(\result)
-                && parent >= index
-                && IsParent(parent, child) ==>
-                    HeapElementValue(\result, parent) <= HeapElementValue(\result, child);    
+        ensures repaired_heap: ValidHeap(\result);            
 */
 Heap testHeapBubbleDown7(Heap heap, int index) {
     int child;
@@ -2221,28 +2223,34 @@ Heap testHeapBubbleDown7(Heap heap, int index) {
         loop invariant 0 <= index < HeapElementsCount(heap);
 
         loop invariant HeapLowerCutParent(heap, index);
+        loop invariant HeapCutParent(heap, \at(index, Pre), index);
+
+        loop invariant 
+            Parent(index) >= \at(index, Pre) 
+            && HeapHasParent(heap, index) 
+            && HeapHasRightChild(heap, index) ==> 
+                HasHeapProperty(heap, Parent(index), RightChild(index));
+        
+        loop invariant 
+            Parent(index) >= \at(index, Pre)
+            && HeapHasParent(heap, index)
+            && HeapHasLeftChild(heap, index) ==> 
+                HasHeapProperty(heap, Parent(index), LeftChild(index));
 
         for full_repair:
             loop invariant HeapUpperCutParent(heap, index);
 
-        for partial_repair:
-            loop invariant HeapCutParent(heap, \at(index, Pre), index);
+        for full_repair: 
+            loop invariant
+                HeapHasParent(heap, index)
+                && HeapHasLeftChild(heap, index) ==> 
+                    HasHeapProperty(heap, Parent(index), LeftChild(index));
 
         for full_repair: 
-            loop invariant HeapHasParent(heap, index) && HeapHasLeftChild(heap, index) ==> 
-                HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, LeftChild(index));
-
-        for partial_repair: 
-            loop invariant Parent(index) >= \at(index, Pre) && HeapHasParent(heap, index) && HeapHasLeftChild(heap, index) ==> 
-                HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, LeftChild(index));
-
-        for full_repair: 
-            loop invariant HeapHasParent(heap, index) && HeapHasRightChild(heap, index) ==> 
-                HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, RightChild(index));
-
-        for partial_repair: 
-            loop invariant  Parent(index) >= \at(index, Pre) && HeapHasParent(heap, index) && HeapHasRightChild(heap, index) ==> 
-                HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, RightChild(index));
+            loop invariant 
+                HeapHasParent(heap, index)
+                && HeapHasRightChild(heap, index) ==> 
+                    HasHeapProperty(heap, Parent(index), RightChild(index));
 
         loop assigns index, child, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
         loop variant HeapElementsCount(heap) - index;

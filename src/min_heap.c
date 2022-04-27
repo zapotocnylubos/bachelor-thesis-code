@@ -116,10 +116,14 @@ typedef struct _Heap {
 // */
 
 /*@
+    predicate ValidHeapStructure(Heap heap) =
+        0 <= HeapElementsCount(heap) <= HeapElementsCapacity(heap)
+        && \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+
     predicate HasHeapProperty(Heap heap, integer parent, integer child) = 
         HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
 
-    predicate ValidHeap(Heap heap) = 
+    predicate ValidHeap(Heap heap) =
         \forall integer parent, child;
             0 <= parent < child < HeapElementsCount(heap)
             && IsParent(parent, child) ==>
@@ -594,45 +598,115 @@ int HeapLowerChild(Heap heap, int index) {
     return rightChild;
 }
 
-void HeapBubbleDown(Heap heap, int index) {
-    while (HeapHasChild(heap, index)) {
-        int child = HeapLowerChild(heap, index);
+/*@ 
+    predicate HeapUpperParentCut(Heap heap, integer index) = 
+        \forall integer parent, child;
+            0 <= parent < index
+            && parent < child < HeapElementsCount(heap)
+            && IsParent(parent, child) ==>
+                HasHeapProperty(heap, parent, child);
 
-        if (heap.elements[index] <= heap.elements[child]){
-            return;
-        }
-
-        int tmp = heap.elements[child];
-        heap.elements[child] = heap.elements[index];
-        heap.elements[index] = tmp;
-
-        index = child;
-    }
-}
-
-Heap testHeapBubbleDown7(Heap heap, int index);
-
-/*@
-    requires  HeapElementsCount(heap) == 2;
-    requires 0 < HeapElementsCount(heap) < HeapElementsCapacity(heap);
-    requires \valid(HeapElements(heap) + (0 .. HeapElementsCapacity(heap) - 1));
-
-    requires correct_heap: 
+    predicate HeapLowerParentCut(Heap heap, integer index) =
         \forall integer parent, child;
             0 <= parent < child < HeapElementsCount(heap)
-                && IsParent(parent, child) ==>
-                    HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+            // && index < parent
+            && IsParent(parent, child) ==>
+                HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+*/
 
-    assigns HeapElements(heap)[0..HeapElementsCount(heap)];
+/*@
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires 0 <= index < HeapElementsCount(heap) < INT_MAX;
+
+    requires HeapLowerParentCut(heap, index);
+
+    assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+
+    // ensures HeapLowerParentCut(heap, index);
+    // ensures partially_repaired_heap:
+    //     \forall integer parent, child;
+    //         0 <= parent < child < HeapElementsCount(heap)
+    //         && parent >= index
+    //         && IsParent(parent, child) ==>
+    //             HasHeapProperty(heap, parent, child);
+
+    // behavior full_repair:
+    //     assumes HeapUpperParentCut(heap, index);
+
+    //     assumes grandparent_heap_property_left_grandchild:
+    //         HeapHasParent(heap, index) && HeapHasLeftChild(heap, index) ==> 
+    //             HasHeapProperty(heap, Parent(index), LeftChild(index));
+
+    //     assumes grandparent_heap_property_right_grandchild:
+    //         HeapHasParent(heap, index) && HeapHasRightChild(heap, index) ==> 
+    //             HasHeapProperty(heap, Parent(index), RightChild(index));
+
+    //     ensures repaired_heap: ValidHeap(heap);            
+*/
+void HeapBubbleDown2(Heap heap, int index) {
+    //@ assert \false;
+
+
+    // int child;
+
+    // /*@
+    //     loop invariant 0 <= index < HeapElementsCount(heap);
+
+    //     loop invariant HeapLowerParentCut(heap, index);
+    //     loop invariant HeapCutParent(heap, \at(index, Pre), index);
+
+    //     loop invariant 
+    //         Parent(index) >= \at(index, Pre) 
+    //         && HeapHasParent(heap, index) 
+    //         && HeapHasRightChild(heap, index) ==> 
+    //             HasHeapProperty(heap, Parent(index), RightChild(index));
+        
+    //     loop invariant 
+    //         Parent(index) >= \at(index, Pre)
+    //         && HeapHasParent(heap, index)
+    //         && HeapHasLeftChild(heap, index) ==> 
+    //             HasHeapProperty(heap, Parent(index), LeftChild(index));
+
+    //     for full_repair:
+    //         loop invariant HeapUpperParentCut(heap, index);
+
+    //     for full_repair: 
+    //         loop invariant
+    //             HeapHasParent(heap, index)
+    //             && HeapHasLeftChild(heap, index) ==> 
+    //                 HasHeapProperty(heap, Parent(index), LeftChild(index));
+
+    //     for full_repair: 
+    //         loop invariant 
+    //             HeapHasParent(heap, index)
+    //             && HeapHasRightChild(heap, index) ==> 
+    //                 HasHeapProperty(heap, Parent(index), RightChild(index));
+
+    //     loop assigns index, child, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+    //     loop variant HeapElementsCount(heap) - index;
+    // */
+    // while (HeapHasChild(heap, index)) {
+    //     child = HeapLowerChild(heap, index);
+
+    //     if (heap.elements[index] <= heap.elements[child]) {
+    //         break;
+    //     }
+
+    //     swap(heap.elements + index, heap.elements + child);
+
+    //     index = child;
+    // }
+
+}
+
+/*@
+    //requires ValidHeapStructure(heap);
+    requires ValidHeap(heap);
+
+    //assigns HeapElements(\result)[0..HeapElementsCount(\result) - 1];
 
     ensures count_decrease: HeapElementsCount(\result) == HeapElementsCount(heap) - 1;
-    ensures capacity_unchanged:  HeapElementsCapacity(\result) == HeapElementsCapacity(heap);
-
-    ensures correct_heap:
-        \forall integer parent, child;
-            0 <= parent < child < HeapElementsCount(\result) ==>
-                IsParent(parent, child) ==>
-                    HeapElementValue(\result, parent) <= HeapElementValue(\result, child);
+    ensures ValidHeap(\result);
 */
 Heap HeapExtractMin(Heap heap) {
     int last = heap.elementsCount - 1;
@@ -644,35 +718,35 @@ Heap HeapExtractMin(Heap heap) {
     heap.elementsCount--;
 
     if (0 < heap.elementsCount) {
-        // return testHeapBubbleDown(heap, 0);
-        testHeapBubbleDown7(heap, 0);  // TODO: netreba vracet heap z testHeapBubbleDown6
+        HeapBubbleDown(heap, 0);
     }
+
+    //@ assert \false;
 
     return heap;
 }
 
 /*@
-    // requires 0 <= elementsCount;
-    requires 5 == elementsCount;
+    requires elementsCount == 2;
+    requires 0 <= elementsCount < INT_MAX;
     requires \valid(elements + (0 .. elementsCount - 1));
 
-    // assigns HeapElements(\result)[0..HeapElementsCapacity(\result) - 1];
-    //assigns elements[0 .. elementsCount - 1];
-    // assigns HeapElements(\result)[0..HeapElementsCapacity(\result) - 1], elements[0 .. elementsCount - 1];
-    // assigns \nothing;
     assigns HeapElements(\result)[0..HeapElementsCount(\result) - 1];
 
-    ensures correct_heap:
-        \forall integer parent, child;
-            0 <= parent < child < HeapElementsCount(\result) ==>
-                IsParent(parent, child) ==>
-                    HeapElementValue(\result, parent) <= HeapElementValue(\result, child);
+    ensures ValidHeap(\result);
 */
 Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity) {
     Heap heap, partial;
     heap.elements = elements;
     heap.elementsCount = elementsCount;
     heap.elementsCapacity = elementsCapacity;
+
+    // ensures partially_repaired_heap:
+    //     \forall integer parent, child;
+    //         0 <= parent < child < HeapElementsCount(\result)
+    //         && parent >= index
+    //         && IsParent(parent, child) ==>
+    //             HasHeapProperty(\result, parent, child);
 
     /*@
         loop invariant -1 <= i <= ((int)\floor(elementsCount / 2)) - 1;
@@ -681,13 +755,25 @@ Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity) {
             0 <= parent < child < HeapElementsCount(heap)
             && parent > i
             && IsParent(parent, child) ==>
-                HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+                HasHeapProperty(heap, parent, child);
 
-        loop assigns i, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+        loop assigns i, heap, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
         loop variant i;
     */
     for (int i = ((int)floor(elementsCount / 2)) - 1; i >= 0; i--) {
-        testHeapBubbleDown7(heap, i);
+        /*@ assert \forall integer parent, child;
+            0 <= parent < child < HeapElementsCount(heap)
+            && parent > i
+            && IsParent(parent, child) ==>
+                HasHeapProperty(heap, parent, child);
+        */
+        HeapBubbleDown(heap, i);
+        /*@ assert \forall integer parent, child;
+            0 <= parent < child < HeapElementsCount(heap)
+            && parent >= i
+            && IsParent(parent, child) ==>
+                HasHeapProperty(heap, parent, child);
+        */
     }
     
     return heap;
@@ -2174,7 +2260,6 @@ Heap testHeapBubbleDown6(Heap heap, int index) {
     return heap;
 }
 
-
 /*@
     predicate HeapCutParent(Heap heap, integer from, integer to) = 
         \forall integer parent, child;
@@ -2184,74 +2269,59 @@ Heap testHeapBubbleDown6(Heap heap, int index) {
                 HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
     
     predicate HeapUpperCutParent(Heap heap, integer index) = HeapCutParent(heap, 0, index);
-
     predicate HeapLowerCutParent(Heap heap, integer index) = HeapCutParent(heap, index + 1, HeapElementsCount(heap));
 */
 
 /*@
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
     requires 0 <= index < HeapElementsCount(heap);
-
     requires HeapLowerCutParent(heap, index);
-
     assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
-
-    ensures partially_repaired_heap:
-        \forall integer parent, child;
-            0 <= parent < child < HeapElementsCount(\result)
-            && parent >= index
-            && IsParent(parent, child) ==>
-                HasHeapProperty(\result, parent, child);
-
+    // ensures same_count: HeapElementsCount(\result) == HeapElementsCount(heap);
     behavior full_repair:
         assumes HeapUpperCutParent(heap, index);
-
         assumes grandparent_heap_property_left_grandchild:
             HeapHasParent(heap, index) && HeapHasLeftChild(heap, index) ==> 
-                HasHeapProperty(heap, Parent(index), LeftChild(index));
-
+                HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, LeftChild(index));
         assumes grandparent_heap_property_right_grandchild:
             HeapHasParent(heap, index) && HeapHasRightChild(heap, index) ==> 
-                HasHeapProperty(heap, Parent(index), RightChild(index));
-
-        ensures repaired_heap: ValidHeap(\result);            
+                HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, RightChild(index));
+        ensures repaired_heap:
+            \forall integer parent, child;
+                0 <= parent < child < HeapElementsCount(\result)
+                && IsParent(parent, child) ==>
+                    HeapElementValue(\result, parent) <= HeapElementValue(\result, child);
+    behavior partial_repair:
+        ensures HeapLowerCutParent(\result, index);
+        ensures partially_repaired_heap:
+            \forall integer parent, child;
+                0 <= parent < child < HeapElementsCount(\result)
+                && parent >= index
+                && IsParent(parent, child) ==>
+                    HeapElementValue(\result, parent) <= HeapElementValue(\result, child);    
 */
 Heap testHeapBubbleDown7(Heap heap, int index) {
     int child;
 
     /*@
         loop invariant 0 <= index < HeapElementsCount(heap);
-
         loop invariant HeapLowerCutParent(heap, index);
-        loop invariant HeapCutParent(heap, \at(index, Pre), index);
-
-        loop invariant 
-            Parent(index) >= \at(index, Pre) 
-            && HeapHasParent(heap, index) 
-            && HeapHasRightChild(heap, index) ==> 
-                HasHeapProperty(heap, Parent(index), RightChild(index));
-        
-        loop invariant 
-            Parent(index) >= \at(index, Pre)
-            && HeapHasParent(heap, index)
-            && HeapHasLeftChild(heap, index) ==> 
-                HasHeapProperty(heap, Parent(index), LeftChild(index));
-
         for full_repair:
             loop invariant HeapUpperCutParent(heap, index);
-
+        for partial_repair:
+            loop invariant HeapCutParent(heap, \at(index, Pre), index);
         for full_repair: 
-            loop invariant
-                HeapHasParent(heap, index)
-                && HeapHasLeftChild(heap, index) ==> 
-                    HasHeapProperty(heap, Parent(index), LeftChild(index));
-
+            loop invariant HeapHasParent(heap, index) && HeapHasLeftChild(heap, index) ==> 
+                HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, LeftChild(index));
+        for partial_repair: 
+            loop invariant Parent(index) >= \at(index, Pre) && HeapHasParent(heap, index) && HeapHasLeftChild(heap, index) ==> 
+                HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, LeftChild(index));
         for full_repair: 
-            loop invariant 
-                HeapHasParent(heap, index)
-                && HeapHasRightChild(heap, index) ==> 
-                    HasHeapProperty(heap, Parent(index), RightChild(index));
-
+            loop invariant HeapHasParent(heap, index) && HeapHasRightChild(heap, index) ==> 
+                HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, RightChild(index));
+        for partial_repair: 
+            loop invariant  Parent(index) >= \at(index, Pre) && HeapHasParent(heap, index) && HeapHasRightChild(heap, index) ==> 
+                HeapElementValue(heap, Parent(index)) <= HeapElementValue(heap, RightChild(index));
         loop assigns index, child, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
         loop variant HeapElementsCount(heap) - index;
     */
@@ -2267,5 +2337,6 @@ Heap testHeapBubbleDown7(Heap heap, int index) {
         index = child;
     }
 
+    //@ assert \false;
     return heap;
 }

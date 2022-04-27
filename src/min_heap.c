@@ -615,8 +615,9 @@ int HeapLowerChild(Heap heap, int index) {
 */
 
 /*@
+    requires 0 < HeapElementsCount(heap);
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
-    requires 0 <= index < HeapElementsCount(heap) < INT_MAX;
+    requires 0 <= index < HeapElementsCount(heap);
 
     requires HeapLowerParentCut(heap, index);
 
@@ -644,6 +645,8 @@ int HeapLowerChild(Heap heap, int index) {
     //     ensures repaired_heap: ValidHeap(heap);            
 */
 void HeapBubbleDown2(Heap heap, int index) {
+    int o = 0;
+    //@ assert 3 == 1 + 1;
     //@ assert \false;
 
 

@@ -321,10 +321,10 @@ int HeapLowerChild(Heap heap, int parent) {
 /*@
     predicate HeapCutParent(Heap heap, integer from, integer to) = 
         \forall integer parent, child;
-            0 <= parent < child < HeapElementsCount(heap)
-            && from <= parent < to
+            from <= parent < to
+            && parent < child < HeapElementsCount(heap)
             && IsParent(parent, child) ==>
-                HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+                HasHeapProperty(heap, parent, child);
     
     predicate HeapUpperCutParent(Heap heap, integer index) = HeapCutParent(heap, 0, index);
     predicate HeapLowerCutParent(Heap heap, integer index) = HeapCutParent(heap, index + 1, HeapElementsCount(heap));
@@ -430,6 +430,11 @@ void HeapBubbleDown(Heap heap, int index) {
 
         index = child;
     }
+    // assert HasHeapProperty(heap, 0, 1);
+    //@ assert HasHeapProperty(heap, 0, 2);
+    //@ assert HasHeapProperty(heap, 1, 3);
+    //@ assert HasHeapProperty(heap, 1, 4);
+
     //@ assert HeapLowerParentCut(heap, index);
     //@ assert HeapCutParent(heap, \at(index, Pre), index);
 

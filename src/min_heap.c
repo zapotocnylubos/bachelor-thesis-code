@@ -455,14 +455,13 @@ void HeapBubbleDown(Heap heap, int index) {
 }
 
 /*@
-    requires 0 < HeapElementsCount(heap);
+    requires 2 == HeapElementsCount(heap);
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
-    requires \forall integer ancestor, descendant;
-        0 <= ancestor < descendant < HeapElementsCount(heap)
-        && IsParent(ancestor, descendant) ==>
-            HasHeapProperty(heap, ancestor, descendant);
+    requires \forall integer child;
+        0 < child < HeapElementsCount(heap) ==> 
+            HasHeapProperty(heap, Parent(child), child);
 
-    //assigns HeapElements(\result)[0..HeapElementsCount(\result) - 1];
+    assigns HeapElements(\result)[0..HeapElementsCount(\result) - 1];
 
     ensures count_decrease: HeapElementsCount(\result) == HeapElementsCount(heap) - 1;
     ensures \forall integer ancestor, descendant;
@@ -479,25 +478,29 @@ Heap HeapExtractMin(Heap heap) {
 
     heap.elementsCount--;
 
-    // assert \false;
+    //@ assert \false;
 
     if (0 < heap.elementsCount) {
         HeapBubbleDown(heap, 0);
     }
 
-    // assert \false;
+    //@ assert \false;
 
     return heap;
 }
 
 /*@
-    lemma tt:
-        (\forall Heap heap, integer ancestor, descendant;
-            0 <= ancestor < descendant < HeapElementsCount(heap)
-            && IsParent(ancestor, descendant) ==>
-                HasHeapProperty(heap, ancestor, descendant)
-        ) ==> \false;
+    requires 0 < HeapElementsCount(heap);
+    // requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires \forall integer ancestor, descendant;
+        0 <= ancestor < descendant < HeapElementsCount(heap)
+        && IsParent(ancestor, descendant) ==>
+            HasHeapProperty(heap, ancestor, descendant);
 */
+int t(Heap heap) {
+    //@ assert \false;
+    return 0;
+}
 
 /*@
     requires 1 < HeapElementsCount(heap);
@@ -507,7 +510,7 @@ Heap HeapExtractMin(Heap heap) {
         && IsParent(ancestor, descendant) ==>
             HasHeapProperty(heap, ancestor, descendant);
 */
-int t(Heap heap) {
+int tt(Heap heap) {
     //@ assert \false;
     return 0;
 }

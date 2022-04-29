@@ -81,7 +81,7 @@ typedef struct _Heap {
         IsLeftChild(child, parent) || IsRightChild(child, parent);
 
     predicate IsParent(integer parent, integer child) =
-        IsChild(child, parent);
+        parent == Parent(child);
 */
 
 
@@ -455,13 +455,13 @@ void HeapBubbleDown(Heap heap, int index) {
 }
 
 /*@
-    requires 2 == HeapElementsCount(heap);
+    //requires 0 < HeapElementsCount(heap);
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
     requires \forall integer child;
-        0 < child < HeapElementsCount(heap) ==> 
-            HasHeapProperty(heap, Parent(child), child);
+                0 < child < HeapElementsCount(heap) ==> 
+                    HasHeapProperty(heap, Parent(child), child);
 
-    assigns HeapElements(\result)[0..HeapElementsCount(\result) - 1];
+    assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
 
     ensures count_decrease: HeapElementsCount(\result) == HeapElementsCount(heap) - 1;
     ensures \forall integer ancestor, descendant;
@@ -470,21 +470,21 @@ void HeapBubbleDown(Heap heap, int index) {
             HasHeapProperty(\result, ancestor, descendant);
 */
 Heap HeapExtractMin(Heap heap) {
-    int last = heap.elementsCount - 1;
+    // int last = heap.elementsCount - 1;
 
-    int tmp = heap.elements[0];
-    heap.elements[0] = heap.elements[last];
-    heap.elements[last] = tmp;
+    // int tmp = heap.elements[0];
+    // heap.elements[0] = heap.elements[last];
+    // heap.elements[last] = tmp;
 
-    heap.elementsCount--;
-
-    //@ assert \false;
-
-    if (0 < heap.elementsCount) {
-        HeapBubbleDown(heap, 0);
-    }
+    // heap.elementsCount--;
 
     //@ assert \false;
+
+    // if (0 < heap.elementsCount) {
+    //     HeapBubbleDown(heap, 0);
+    // }
+
+    // //@ assert \false;
 
     return heap;
 }

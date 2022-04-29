@@ -304,27 +304,27 @@ int HeapLowerChild(Heap heap, int parent) {
 
 /*@ 
     predicate HeapUpperParentCut(Heap heap, integer index) = 
-        \forall integer parent, child;
-            0 <= parent < index
-            && 0 < child < HeapElementsCount(heap)
-            && IsParent(parent, child) ==>
-                HasHeapProperty(heap, parent, child);
+        \forall integer ancestor, descendant;
+            0 <= ancestor < index
+            && ancestor < descendant < HeapElementsCount(heap)
+            && IsParent(ancestor, descendant) ==>
+                HasHeapProperty(heap, ancestor, descendant);
 
     predicate HeapLowerParentCut(Heap heap, integer index) =
-        \forall integer parent, child;
-            index < parent < HeapElementsCount(heap)
-            && 0 < child < HeapElementsCount(heap)
-            && IsParent(parent, child) ==>
-                HasHeapProperty(heap, parent, child);
+        \forall integer ancestor, descendant;
+            index < ancestor < HeapElementsCount(heap)
+            && ancestor < descendant < HeapElementsCount(heap)
+            && IsParent(ancestor, descendant) ==>
+                HasHeapProperty(heap, ancestor, descendant);
 */
 
 /*@
     predicate HeapCutParent(Heap heap, integer from, integer to) = 
-        \forall integer parent, child;
-            from <= parent < to
-            && parent < child < HeapElementsCount(heap)
-            && IsParent(parent, child) ==>
-                HasHeapProperty(heap, parent, child);
+        \forall integer ancestor, descendant;
+            from <= ancestor < to
+            && ancestor < descendant < HeapElementsCount(heap)
+            && IsParent(ancestor, descendant) ==>
+                HasHeapProperty(heap, ancestor, descendant);
     
     predicate HeapUpperCutParent(Heap heap, integer index) = HeapCutParent(heap, 0, index);
     predicate HeapLowerCutParent(Heap heap, integer index) = HeapCutParent(heap, index + 1, HeapElementsCount(heap));
@@ -334,40 +334,42 @@ int HeapLowerChild(Heap heap, int parent) {
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
     requires 0 <= index < HeapElementsCount(heap);
 
-    requires HeapUpperParentCut(heap, index);
     requires HeapLowerParentCut(heap, index);
-
-    requires grandparent_heap_property_left_grandchild:
-        HeapHasParent(heap, index)
-        && HeapHasLeftChild(heap, index) ==> 
-            HasHeapProperty(heap, Parent(index), LeftChild(index));
-
-    requires grandparent_heap_property_right_grandchild:
-        HeapHasParent(heap, index)
-        && HeapHasRightChild(heap, index) ==> 
-            HasHeapProperty(heap, Parent(index), RightChild(index));
 
     assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
 
-    //ensures HeapLowerParentCut(heap, index);
+    // ensures HeapLowerParentCut(heap, index);
+
     ensures partially_repaired_heap:
-        \forall integer parent, child;
-            0 <= parent < child < HeapElementsCount(heap)
-            && IsParent(parent, child) ==>
-                HasHeapProperty(heap, parent, child);
+        \forall integer ancestor, descendant;
+            index <= ancestor < descendant < HeapElementsCount(heap)
+            && IsParent(ancestor, descendant) ==>
+                HasHeapProperty(heap, ancestor, descendant);
 
-    // behavior full_repair:
-    //     assumes HeapUpperParentCut(heap, index);
+    behavior full_repair:
+        assumes \forall integer ancestor, descendant;
+            0 <= ancestor < index
+            && ancestor < descendant < HeapElementsCount(heap)
+            && IsParent(ancestor, descendant) ==>
+                HasHeapProperty(heap, ancestor, descendant);
 
-    //     assumes grandparent_heap_property_left_grandchild:
-    //         HeapHasParent(heap, index) && HeapHasLeftChild(heap, index) ==> 
-    //             HasHeapProperty(heap, Parent(index), LeftChild(index));
+        assumes grandparent_heap_property_left_grandchild:
+            HeapHasParent(heap, index) 
+            && HeapHasLeftChild(heap, index) ==> 
+                HasHeapProperty(heap, Parent(index), LeftChild(index));
 
-    //     assumes grandparent_heap_property_right_grandchild:
-    //         HeapHasParent(heap, index) && HeapHasRightChild(heap, index) ==> 
-    //             HasHeapProperty(heap, Parent(index), RightChild(index));
+        assumes grandparent_heap_property_right_grandchild:
+            HeapHasParent(heap, index) 
+            && HeapHasRightChild(heap, index) ==> 
+                HasHeapProperty(heap, Parent(index), RightChild(index));
 
-    //     ensures repaired_heap: ValidHeap(heap);            
+        // ensures HeapUpperParentCut(heap, index);
+
+        ensures repaired_heap: 
+            \forall integer ancestor, descendant;
+                0 <= ancestor < descendant < HeapElementsCount(heap)
+                && IsParent(ancestor, descendant) ==>
+                    HasHeapProperty(heap, ancestor, descendant);            
 */
 void HeapBubbleDown(Heap heap, int index) {
     int child;
@@ -375,54 +377,59 @@ void HeapBubbleDown(Heap heap, int index) {
     /*@
         loop invariant 0 <= index < HeapElementsCount(heap);
 
-        loop invariant HeapUpperParentCut(heap, index);
+        loop invariant \forall integer ancestor, descendant;
+            \at(index, Pre) <= ancestor < index
+            && ancestor < descendant < HeapElementsCount(heap)
+            && IsParent(ancestor, descendant) ==>
+                HasHeapProperty(heap, ancestor, descendant);
+
         loop invariant HeapLowerParentCut(heap, index);
 
         loop invariant
-            HeapHasParent(heap, index) ==> 
-                \forall integer parent, child_2;        
-                    Parent(index) <= parent < index
-                    && parent < child_2 < HeapElementsCount(heap)
-                    && IsParent(parent, child_2) ==>
-                        HasHeapProperty(heap, parent, child_2);
-
-        // loop invariant 
-        //     HeapHasParent(heap, index)
-        //     && HeapHasLeftChild(heap, Parent(index)) ==> 
-        //         HasHeapProperty(heap, Parent(index), LeftChild(Parent(index)));
-
-        // loop invariant 
-        //     HeapHasParent(heap, index)
-        //     && HeapHasRightChild(heap, Parent(index)) ==> 
-        //         HasHeapProperty(heap, Parent(index), RightChild(Parent(index)));
-
+            HeapHasParent(heap, index)
+            && \at(index, Pre) <= Parent(index) ==> 
+                \forall integer ancestor, descendant;        
+                    Parent(index) <= ancestor < index
+                    && ancestor < descendant < HeapElementsCount(heap)
+                    && IsParent(ancestor, descendant) ==>
+                        HasHeapProperty(heap, ancestor, descendant);            
+        
         loop invariant grandparent_heap_property_left_grandchild:
             HeapHasParent(heap, index)
+            && \at(index, Pre) <= Parent(index)
             && HeapHasLeftChild(heap, index) ==> 
-                HasHeapProperty(heap, Parent(index), LeftChild(index));
-        
+                HasHeapProperty(heap, Parent(index), LeftChild(index));            
+
         loop invariant grandparent_heap_property_right_grandchild:
             HeapHasParent(heap, index)
+            && \at(index, Pre) <= Parent(index)
             && HeapHasRightChild(heap, index) ==> 
                 HasHeapProperty(heap, Parent(index), RightChild(index));
-
-        // for full_repair:
-        //     loop invariant HeapUpperParentCut(heap, index);
-
-        // for full_repair: 
-        //     loop invariant
-        //         HeapHasParent(heap, index)
-        //         && HeapHasLeftChild(heap, index) ==> 
-        //             HasHeapProperty(heap, Parent(index), LeftChild(index));
-
-        // for full_repair: 
-        //     loop invariant 
-        //         HeapHasParent(heap, index)
-        //         && HeapHasRightChild(heap, index) ==> 
-        //             HasHeapProperty(heap, Parent(index), RightChild(index));
-
+        
         loop assigns index, child, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
-        loop variant HeapElementsCount(heap) - index;
+
+        for full_repair:
+            loop invariant HeapUpperParentCut(heap, index);
+
+            loop invariant 
+                HeapHasParent(heap, index) ==> 
+                    \forall integer ancestor, descendant;        
+                        Parent(index) <= ancestor < index
+                        && ancestor < descendant < HeapElementsCount(heap)
+                        && IsParent(ancestor, descendant) ==>
+                            HasHeapProperty(heap, ancestor, descendant);
+
+            loop invariant
+                HeapHasParent(heap, index)
+                && HeapHasLeftChild(heap, index) ==> 
+                    HasHeapProperty(heap, Parent(index), LeftChild(index));
+
+            loop invariant
+                HeapHasParent(heap, index)
+                && HeapHasRightChild(heap, index) ==> 
+                    HasHeapProperty(heap, Parent(index), RightChild(index));
+            
+        loop variant HeapElementsCount(heap) - index;        
     */
     while (HeapHasChild(heap, index)) {
         child = HeapLowerChild(heap, index);
@@ -430,6 +437,12 @@ void HeapBubbleDown(Heap heap, int index) {
         if (heap.elements[index] <= heap.elements[child]) {
             break;
         }
+
+        /* 
+            These asserts help provers to prove these loop invariants:
+            - 'grandparent_heap_property_left_grandchild'
+            - 'grandparent_heap_property_right_grandchild'
+        */
 
         //@ assert HeapHasLeftChild(heap, child) ==> HasHeapProperty(heap, child, LeftChild(child));
         //@ assert HeapHasRightChild(heap, child) ==> HasHeapProperty(heap, child, RightChild(child));

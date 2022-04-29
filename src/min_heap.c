@@ -46,10 +46,10 @@ typedef struct _Heap {
     predicate HasHeapProperty(Heap heap, integer parent, integer child) = 
         HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
 
-    predicate ValidHeap(Heap heap) =
-        \forall integer parent, child;
-            0 <= parent < child < HeapElementsCount(heap) ==>
-                HasHeapProperty(heap, Parent(child), child);
+    // predicate ValidHeap(Heap heap) =
+    //     \forall integer parent, child;
+    //         0 <= parent < child < HeapElementsCount(heap) ==>
+    //             HasHeapProperty(heap, parent, child);
 */
 
 /*@
@@ -452,5 +452,100 @@ void HeapBubbleDown(Heap heap, int index) {
         index = child;
     }
 
+}
+
+/*@
+    requires 0 < HeapElementsCount(heap);
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires \forall integer ancestor, descendant;
+        0 <= ancestor < descendant < HeapElementsCount(heap)
+        && IsParent(ancestor, descendant) ==>
+            HasHeapProperty(heap, ancestor, descendant);
+
+    //assigns HeapElements(\result)[0..HeapElementsCount(\result) - 1];
+
+    ensures count_decrease: HeapElementsCount(\result) == HeapElementsCount(heap) - 1;
+    ensures \forall integer ancestor, descendant;
+        0 <= ancestor < descendant < HeapElementsCount(\result)
+        && IsParent(ancestor, descendant) ==>
+            HasHeapProperty(\result, ancestor, descendant);
+*/
+Heap HeapExtractMin(Heap heap) {
+    int last = heap.elementsCount - 1;
+
+    int tmp = heap.elements[0];
+    heap.elements[0] = heap.elements[last];
+    heap.elements[last] = tmp;
+
+    heap.elementsCount--;
+
     // assert \false;
+
+    if (0 < heap.elementsCount) {
+        HeapBubbleDown(heap, 0);
+    }
+
+    // assert \false;
+
+    return heap;
+}
+
+/*@
+    lemma tt:
+        (\forall Heap heap, integer ancestor, descendant;
+            0 <= ancestor < descendant < HeapElementsCount(heap)
+            && IsParent(ancestor, descendant) ==>
+                HasHeapProperty(heap, ancestor, descendant)
+        ) ==> \false;
+*/
+
+/*@
+    requires 1 < HeapElementsCount(heap);
+    // requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires \forall integer ancestor, descendant;
+        0 <= ancestor < descendant < HeapElementsCount(heap)
+        && IsParent(ancestor, descendant) ==>
+            HasHeapProperty(heap, ancestor, descendant);
+*/
+int t(Heap heap) {
+    //@ assert \false;
+    return 0;
+}
+
+
+/*@
+    requires 0 <= elementsCount;
+    requires \valid(elements + (0 .. elementsCount - 1));
+
+    assigns elements[0 .. elementsCount - 1];
+
+    ensures 
+        \forall integer ancestor, descendant;
+            0 <= ancestor < descendant < HeapElementsCount(\result)
+            && IsParent(ancestor, descendant) ==>
+                HasHeapProperty(\result, ancestor, descendant);
+*/
+Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity) {
+    Heap heap;
+    heap.elements = elements;
+    heap.elementsCount = elementsCount;
+    heap.elementsCapacity = elementsCapacity;
+
+    /*@
+        loop invariant -1 <= i <= ((int)\floor(HeapElementsCount(heap) / 2)) - 1;
+
+        loop invariant 
+            \forall integer ancestor, descendant;
+                i < ancestor < descendant < HeapElementsCount(heap)
+                && IsParent(ancestor, descendant) ==>
+                    HasHeapProperty(heap, ancestor, descendant);
+
+        loop assigns i, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+        loop variant i;
+    */
+    for (int i = ((int)floor(heap.elementsCount / 2)) - 1; i >= 0; i--) {
+        HeapBubbleDown(heap, i);
+    }
+    
+    return heap;
 }

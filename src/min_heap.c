@@ -71,7 +71,7 @@ typedef struct _Heap {
         IsLeftChild(child, parent) || IsRightChild(child, parent);
 
     predicate IsParent(integer parent, integer child) =
-        parent == Parent(child);
+        Parent(child) == parent;
 */
 
 /*@

@@ -43,8 +43,8 @@ typedef struct _Heap {
 */
 
 /*@
-    predicate HeapHasParent(Heap heap, integer index) =
-        0 <= Parent(index) < HeapElementsCount(heap);
+    predicate HeapHasParent(Heap heap, integer child) =
+        0 < child < HeapElementsCount(heap);
 
     predicate HeapHasLeftChild(Heap heap, integer parent) =
         0 < LeftChild(parent) < HeapElementsCount(heap);
@@ -521,9 +521,7 @@ void HeapBubbleDown(Heap heap, int index) {
 Heap HeapExtractMin(Heap heap) {
     int last = heap.elementsCount - 1;
 
-    int tmp = heap.elements[0];
-    heap.elements[0] = heap.elements[last];
-    heap.elements[last] = tmp;
+    swap(heap.elements, heap.elements + last);
 
     heap.elementsCount--;
 

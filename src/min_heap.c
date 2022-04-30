@@ -509,6 +509,27 @@ void HeapBubbleDown(Heap heap, int index) {
 }
 
 /*@
+    requires 0 <= HeapElementsCount(heap) < HeapElementsCapacity(heap);
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCapacity(heap) - 1));
+    requires ValidHeap(heap);
+
+    assigns HeapElements(heap)[0..HeapElementsCount(heap)];
+
+    ensures count_increase: HeapElementsCount(\result) == HeapElementsCount(heap) + 1;
+    ensures ValidHeap(\result);
+*/
+Heap HeapInsert(Heap heap, int element) {
+    int index = heap.elementsCount;
+
+    heap.elements[index] = element;
+    heap.elementsCount++;
+
+    HeapBubbleUp(heap, index);
+
+    return heap;
+}
+
+/*@
     requires 0 < HeapElementsCount(heap);
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
     requires ValidHeap(heap);

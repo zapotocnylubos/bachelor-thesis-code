@@ -56,8 +56,8 @@ typedef struct _Heap {
     predicate HeapHasParent(Heap heap, integer index) =
         0 <= Parent(index) < HeapElementsCount(heap);
 
-    predicate HeapHasLeftChild(Heap heap, integer index) =
-        0 < LeftChild(index) < HeapElementsCount(heap);
+    predicate HeapHasLeftChild(Heap heap, integer parent) =
+        0 < LeftChild(parent) < HeapElementsCount(heap);
     
     predicate HeapHasRightChild(Heap heap, integer index) =
         0 < RightChild(index) < HeapElementsCount(heap);
@@ -103,7 +103,7 @@ void swap(int *a, int *b) {
 
     ensures \result == HeapInternalNodeCount(heap);
 */
-inline int HeapInternalNodeCount(Heap heap) {
+int HeapInternalNodeCount(Heap heap) {
     return floor(heap.elementsCount / 2);
 }
 
@@ -114,7 +114,7 @@ inline int HeapInternalNodeCount(Heap heap) {
 
     ensures \result == HeapExternalNodeCount(heap);
 */
-inline int HeapExternalNodeCount(Heap heap) {
+int HeapExternalNodeCount(Heap heap) {
     return ceil(heap.elementsCount / 2);
 }
 
@@ -126,7 +126,7 @@ inline int HeapExternalNodeCount(Heap heap) {
     ensures \result == Parent(child);
     ensures 0 <= \result < child;
 */
-inline int HeapParent(int child) {
+int HeapParent(int child) {
     return (child - 1) / 2;
 }
 
@@ -138,7 +138,7 @@ inline int HeapParent(int child) {
 
     ensures \result == LeftChild(parent);
 */
-inline int HeapLeftChild(int parent) {
+int HeapLeftChild(int parent) {
     return (2 * parent) + 1;   
 }
 
@@ -150,7 +150,7 @@ inline int HeapLeftChild(int parent) {
 
     ensures \result == RightChild(parent);
 */
-inline int HeapRightChild(int parent) {
+int HeapRightChild(int parent) {
     return (2 * parent) + 2;
 }
 
@@ -170,8 +170,8 @@ inline int HeapRightChild(int parent) {
     complete behaviors;
     disjoint behaviors;
 */
-inline int HeapHasLeftChild(Heap heap, int parent) {
-    return (0 <= parent) && (parent < HeapInternalNodeCount(heap));
+int HeapHasLeftChild(Heap heap, int parent) {
+    return parent < HeapInternalNodeCount(heap);
 }
 
 /*@
@@ -190,14 +190,12 @@ inline int HeapHasLeftChild(Heap heap, int parent) {
     complete behaviors;
     disjoint behaviors;
 */
-inline int HeapHasRightChild(Heap heap, int parent) {
+int HeapHasRightChild(Heap heap, int parent) {
     return HeapHasLeftChild(heap, parent) && (HeapRightChild(parent) < heap.elementsCount);
 }
 
 /*@
     requires 0 <= parent < HeapElementsCount(heap);
-    // requires LeftChild(parent) < INT_MAX;
-    // requires RightChild(parent) < INT_MAX;
 
     assigns \nothing;
 
@@ -213,7 +211,8 @@ inline int HeapHasRightChild(Heap heap, int parent) {
     disjoint behaviors;
 */
 int HeapHasChild(Heap heap, int parent) {
-    return HeapHasLeftChild(heap, parent) || HeapHasRightChild(heap, parent);
+    // In a binary heap, the left child must always be created before the right child
+    return HeapHasLeftChild(heap, parent);
 }
 
 /*@
@@ -271,11 +270,6 @@ int HeapHasBothChildren(Heap heap, int parent) {
                 && HeapHasLeftChild(heap, parent);
         ensures \result == LeftChild(parent);
 
-    behavior has_only_right_child:
-        assumes !HeapHasBothChildren(heap, parent)
-                && HeapHasRightChild(heap, parent);
-        ensures \result == RightChild(parent);
-    
     complete behaviors;
     disjoint behaviors;
 */
@@ -291,11 +285,7 @@ int HeapLowerChild(Heap heap, int parent) {
         return rightChild;
     }
 
-    if (HeapHasLeftChild(heap, parent)) {
-        return leftChild;
-    }
-
-    return rightChild;
+    return leftChild;
 }
 
 
@@ -452,14 +442,17 @@ void HeapBubbleDown(Heap heap, int index) {
         index = child;
     }
 
+    // assert \false;
+
 }
 
 /*@
-    //requires 0 < HeapElementsCount(heap);
+    requires 0 < HeapElementsCount(heap);
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
-    requires \forall integer child;
-                0 < child < HeapElementsCount(heap) ==> 
-                    HasHeapProperty(heap, Parent(child), child);
+    requires \forall integer ancestor, descendant;
+            0 <= ancestor < descendant < HeapElementsCount(heap)
+            && IsParent(ancestor, descendant) ==>
+                HasHeapProperty(heap, ancestor, descendant);
 
     assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
 
@@ -470,49 +463,23 @@ void HeapBubbleDown(Heap heap, int index) {
             HasHeapProperty(\result, ancestor, descendant);
 */
 Heap HeapExtractMin(Heap heap) {
-    // int last = heap.elementsCount - 1;
+    int last = heap.elementsCount - 1;
 
-    // int tmp = heap.elements[0];
-    // heap.elements[0] = heap.elements[last];
-    // heap.elements[last] = tmp;
+    int tmp = heap.elements[0];
+    heap.elements[0] = heap.elements[last];
+    heap.elements[last] = tmp;
 
-    // heap.elementsCount--;
+    heap.elementsCount--;
 
-    //@ assert \false;
+    // assert \false;
 
-    // if (0 < heap.elementsCount) {
-    //     HeapBubbleDown(heap, 0);
-    // }
+    if (0 < heap.elementsCount) {
+        HeapBubbleDown(heap, 0);
+    }
 
-    // //@ assert \false;
+    // assert \false;
 
     return heap;
-}
-
-/*@
-    requires 0 < HeapElementsCount(heap);
-    // requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
-    requires \forall integer ancestor, descendant;
-        0 <= ancestor < descendant < HeapElementsCount(heap)
-        && IsParent(ancestor, descendant) ==>
-            HasHeapProperty(heap, ancestor, descendant);
-*/
-int t(Heap heap) {
-    //@ assert \false;
-    return 0;
-}
-
-/*@
-    requires 1 < HeapElementsCount(heap);
-    // requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
-    requires \forall integer ancestor, descendant;
-        0 <= ancestor < descendant < HeapElementsCount(heap)
-        && IsParent(ancestor, descendant) ==>
-            HasHeapProperty(heap, ancestor, descendant);
-*/
-int tt(Heap heap) {
-    //@ assert \false;
-    return 0;
 }
 
 
@@ -547,8 +514,43 @@ Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity) {
         loop variant i;
     */
     for (int i = ((int)floor(heap.elementsCount / 2)) - 1; i >= 0; i--) {
+        
         HeapBubbleDown(heap, i);
     }
     
     return heap;
 }
+
+// void printHeap(Heap heap) {
+//     printf("P:\t");
+//     for(int i = 0; i < heap.elementsCount; i++) {
+//         printf("%d ", heap.elements[i]);
+//     }
+//     printf("\n");
+// }
+
+// int main() {
+//     int arr[5] = {2, 3, 5, 1, 4};
+//     Heap heap = HeapBuild(arr, 5, 5);
+//     printHeap(heap);
+    
+//     printf("%d\n", heap.elements[0]);
+//     heap = HeapExtractMin(heap);
+//     printHeap(heap);
+
+//     printf("%d\n", heap.elements[0]);
+//     heap = HeapExtractMin(heap);
+//     printHeap(heap);
+
+//     printf("%d\n", heap.elements[0]);
+//     heap = HeapExtractMin(heap);
+//     printHeap(heap);
+
+//     printf("%d\n", heap.elements[0]);
+//     heap = HeapExtractMin(heap);
+//     printHeap(heap);
+
+//     printf("%d\n", heap.elements[0]);
+//     heap = HeapExtractMin(heap);
+//     printHeap(heap);
+// }

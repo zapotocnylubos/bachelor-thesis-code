@@ -43,16 +43,6 @@ typedef struct _Heap {
 */
 
 /*@
-    predicate HasHeapProperty(Heap heap, integer parent, integer child) = 
-        HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
-
-    // predicate ValidHeap(Heap heap) =
-    //     \forall integer parent, child;
-    //         0 <= parent < child < HeapElementsCount(heap) ==>
-    //             HasHeapProperty(heap, parent, child);
-*/
-
-/*@
     predicate HeapHasParent(Heap heap, integer index) =
         0 <= Parent(index) < HeapElementsCount(heap);
 
@@ -84,10 +74,23 @@ typedef struct _Heap {
         parent == Parent(child);
 */
 
+/*@
+    predicate HasHeapProperty(Heap heap, integer parent, integer child) = 
+        HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+
+    predicate ValidHeap(Heap heap) =
+        \forall integer ancestor, descendant;
+            0 <= ancestor < descendant < HeapElementsCount(heap)
+            && IsParent(ancestor, descendant) ==>
+                HasHeapProperty(heap, ancestor, descendant);
+*/
+
 
 /*@
     requires \valid(a) && \valid(b);
+
     assigns *a, *b;
+    
     ensures *a == \old(*b) && *b == \old(*a);
 */
 void swap(int *a, int *b) {
@@ -217,8 +220,6 @@ int HeapHasChild(Heap heap, int parent) {
 
 /*@
     requires 0 <= parent < HeapElementsCount(heap);
-    requires LeftChild(parent) < INT_MAX;
-    requires RightChild(parent) < INT_MAX;
 
     assigns \nothing;
 
@@ -288,10 +289,6 @@ int HeapLowerChild(Heap heap, int parent) {
     return leftChild;
 }
 
-
-
-
-
 /*@ 
     predicate HeapUpperParentCut(Heap heap, integer index) = 
         \forall integer ancestor, descendant;
@@ -309,18 +306,6 @@ int HeapLowerChild(Heap heap, int parent) {
 */
 
 /*@
-    predicate HeapCutParent(Heap heap, integer from, integer to) = 
-        \forall integer ancestor, descendant;
-            from <= ancestor < to
-            && ancestor < descendant < HeapElementsCount(heap)
-            && IsParent(ancestor, descendant) ==>
-                HasHeapProperty(heap, ancestor, descendant);
-    
-    predicate HeapUpperCutParent(Heap heap, integer index) = HeapCutParent(heap, 0, index);
-    predicate HeapLowerCutParent(Heap heap, integer index) = HeapCutParent(heap, index + 1, HeapElementsCount(heap));
-*/
-
-/*@
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
     requires 0 <= index < HeapElementsCount(heap);
 
@@ -328,38 +313,26 @@ int HeapLowerChild(Heap heap, int parent) {
 
     assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
 
-    // ensures HeapLowerParentCut(heap, index);
-
-    ensures partially_repaired_heap:
+    ensures partially_valid_heap:
         \forall integer ancestor, descendant;
             index <= ancestor < descendant < HeapElementsCount(heap)
             && IsParent(ancestor, descendant) ==>
                 HasHeapProperty(heap, ancestor, descendant);
 
     behavior full_repair:
-        assumes \forall integer ancestor, descendant;
-            0 <= ancestor < index
-            && ancestor < descendant < HeapElementsCount(heap)
-            && IsParent(ancestor, descendant) ==>
-                HasHeapProperty(heap, ancestor, descendant);
+        assumes HeapUpperParentCut(heap, index);
 
-        assumes grandparent_heap_property_left_grandchild:
+        assumes heap_cut_valid_heap_property_left_child:
             HeapHasParent(heap, index) 
             && HeapHasLeftChild(heap, index) ==> 
                 HasHeapProperty(heap, Parent(index), LeftChild(index));
 
-        assumes grandparent_heap_property_right_grandchild:
+        assumes heap_cut_valid_heap_property_right_child:
             HeapHasParent(heap, index) 
             && HeapHasRightChild(heap, index) ==> 
                 HasHeapProperty(heap, Parent(index), RightChild(index));
 
-        // ensures HeapUpperParentCut(heap, index);
-
-        ensures repaired_heap: 
-            \forall integer ancestor, descendant;
-                0 <= ancestor < descendant < HeapElementsCount(heap)
-                && IsParent(ancestor, descendant) ==>
-                    HasHeapProperty(heap, ancestor, descendant);            
+        ensures ValidHeap(heap);            
 */
 void HeapBubbleDown(Heap heap, int index) {
     int child;
@@ -367,30 +340,22 @@ void HeapBubbleDown(Heap heap, int index) {
     /*@
         loop invariant 0 <= index < HeapElementsCount(heap);
 
-        loop invariant \forall integer ancestor, descendant;
-            \at(index, Pre) <= ancestor < index
-            && ancestor < descendant < HeapElementsCount(heap)
-            && IsParent(ancestor, descendant) ==>
-                HasHeapProperty(heap, ancestor, descendant);
+        loop invariant partial_heap_upper_parent_cut:
+            \forall integer ancestor, descendant;
+                \at(index, Pre) <= ancestor < index
+                && ancestor < descendant < HeapElementsCount(heap)
+                && IsParent(ancestor, descendant) ==>
+                    HasHeapProperty(heap, ancestor, descendant);
 
         loop invariant HeapLowerParentCut(heap, index);
 
-        loop invariant
-            HeapHasParent(heap, index)
-            && \at(index, Pre) <= Parent(index) ==> 
-                \forall integer ancestor, descendant;        
-                    Parent(index) <= ancestor < index
-                    && ancestor < descendant < HeapElementsCount(heap)
-                    && IsParent(ancestor, descendant) ==>
-                        HasHeapProperty(heap, ancestor, descendant);            
-        
-        loop invariant grandparent_heap_property_left_grandchild:
+        loop invariant partial_heap_cut_valid_heap_property_left_child:
             HeapHasParent(heap, index)
             && \at(index, Pre) <= Parent(index)
             && HeapHasLeftChild(heap, index) ==> 
                 HasHeapProperty(heap, Parent(index), LeftChild(index));            
 
-        loop invariant grandparent_heap_property_right_grandchild:
+        loop invariant partial_heap_cut_valid_heap_property_right_child:
             HeapHasParent(heap, index)
             && \at(index, Pre) <= Parent(index)
             && HeapHasRightChild(heap, index) ==> 
@@ -401,20 +366,12 @@ void HeapBubbleDown(Heap heap, int index) {
         for full_repair:
             loop invariant HeapUpperParentCut(heap, index);
 
-            loop invariant 
-                HeapHasParent(heap, index) ==> 
-                    \forall integer ancestor, descendant;        
-                        Parent(index) <= ancestor < index
-                        && ancestor < descendant < HeapElementsCount(heap)
-                        && IsParent(ancestor, descendant) ==>
-                            HasHeapProperty(heap, ancestor, descendant);
-
-            loop invariant
+            loop invariant heap_cut_valid_heap_property_left_child:
                 HeapHasParent(heap, index)
                 && HeapHasLeftChild(heap, index) ==> 
                     HasHeapProperty(heap, Parent(index), LeftChild(index));
 
-            loop invariant
+            loop invariant heap_cut_valid_heap_property_right_child:
                 HeapHasParent(heap, index)
                 && HeapHasRightChild(heap, index) ==> 
                     HasHeapProperty(heap, Parent(index), RightChild(index));
@@ -430,8 +387,8 @@ void HeapBubbleDown(Heap heap, int index) {
 
         /* 
             These asserts help provers to prove these loop invariants:
-            - 'grandparent_heap_property_left_grandchild'
-            - 'grandparent_heap_property_right_grandchild'
+            - '[partial_]heap_cut_valid_heap_property_left_child'
+            - '[partial_]heap_cut_valid_heap_property_right_child'
         */
 
         //@ assert HeapHasLeftChild(heap, child) ==> HasHeapProperty(heap, child, LeftChild(child));
@@ -441,26 +398,17 @@ void HeapBubbleDown(Heap heap, int index) {
 
         index = child;
     }
-
-    // assert \false;
-
 }
 
 /*@
     requires 0 < HeapElementsCount(heap);
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
-    requires \forall integer ancestor, descendant;
-            0 <= ancestor < descendant < HeapElementsCount(heap)
-            && IsParent(ancestor, descendant) ==>
-                HasHeapProperty(heap, ancestor, descendant);
+    requires ValidHeap(heap);
 
     assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
 
     ensures count_decrease: HeapElementsCount(\result) == HeapElementsCount(heap) - 1;
-    ensures \forall integer ancestor, descendant;
-        0 <= ancestor < descendant < HeapElementsCount(\result)
-        && IsParent(ancestor, descendant) ==>
-            HasHeapProperty(\result, ancestor, descendant);
+    ensures ValidHeap(\result);
 */
 Heap HeapExtractMin(Heap heap) {
     int last = heap.elementsCount - 1;
@@ -471,29 +419,20 @@ Heap HeapExtractMin(Heap heap) {
 
     heap.elementsCount--;
 
-    // assert \false;
-
     if (0 < heap.elementsCount) {
         HeapBubbleDown(heap, 0);
     }
 
-    // assert \false;
-
     return heap;
 }
 
-
 /*@
-    requires 0 <= elementsCount;
+    requires 0 <= elementsCount <= elementsCapacity;
     requires \valid(elements + (0 .. elementsCount - 1));
 
     assigns elements[0 .. elementsCount - 1];
 
-    ensures 
-        \forall integer ancestor, descendant;
-            0 <= ancestor < descendant < HeapElementsCount(\result)
-            && IsParent(ancestor, descendant) ==>
-                HasHeapProperty(\result, ancestor, descendant);
+    ensures ValidHeap(\result);
 */
 Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity) {
     Heap heap;
@@ -502,20 +441,19 @@ Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity) {
     heap.elementsCapacity = elementsCapacity;
 
     /*@
-        loop invariant -1 <= i <= ((int)\floor(HeapElementsCount(heap) / 2)) - 1;
+        loop invariant -1 <= index <= ((int)\floor(HeapElementsCount(heap) / 2)) - 1;
 
-        loop invariant 
+        loop invariant partially_valid_heap:
             \forall integer ancestor, descendant;
-                i < ancestor < descendant < HeapElementsCount(heap)
+                index < ancestor < descendant < HeapElementsCount(heap)
                 && IsParent(ancestor, descendant) ==>
                     HasHeapProperty(heap, ancestor, descendant);
 
-        loop assigns i, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
-        loop variant i;
+        loop assigns index, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+        loop variant index;
     */
-    for (int i = ((int)floor(heap.elementsCount / 2)) - 1; i >= 0; i--) {
-        
-        HeapBubbleDown(heap, i);
+    for (int index = ((int)floor(heap.elementsCount / 2)) - 1; index >= 0; index--) {
+        HeapBubbleDown(heap, index);
     }
     
     return heap;

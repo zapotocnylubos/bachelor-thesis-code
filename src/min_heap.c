@@ -376,9 +376,22 @@ void HeapBubbleUp(Heap heap, int index) {
             break;
         }
 
-        //@ assert IsRightChild(index, parent) ==> HasHeapProperty(heap, parent, LeftChild(parent));
-        //@ assert HeapHasParent(heap, parent) ==> HasHeapProperty(heap, Parent(parent), parent);
-        
+        /*@ assert heap_cut_grandparent_invariant:
+                HeapHasParent(heap, parent) ==> 
+                    HasHeapProperty(heap, Parent(parent), parent);
+        */
+
+        /*@ assert heap_cut_parent_heap_property_right_child:
+                IsLeftChild(index, parent) 
+                && HeapHasRightChild(heap, parent) ==> 
+                    HasHeapProperty(heap, parent, RightChild(parent));
+        */
+
+        /*@ assert heap_cut_parent_heap_property_left_child:
+                IsRightChild(index, parent) ==> 
+                    HasHeapProperty(heap, parent, LeftChild(parent));
+        */
+                
         swap(heap.elements + index, heap.elements + parent);
 
         index = parent;

@@ -312,6 +312,66 @@ int HeapLowerChild(Heap heap, int parent) {
 }
 
 /*@
+    inductive IsAncestor(Heap heap, integer ancestor, integer descendant) {
+        case child:
+            \forall Heap heap, integer child;
+                0 < child < HeapElementsCount(heap) ==>
+                    IsAncestor(heap, Parent(child), child);
+        
+        case left_descendants:
+            \forall Heap heap, integer ancestor, descendant;
+                0 <= ancestor < LeftChild(ancestor) < descendant < HeapElementsCount(heap)
+                && IsAncestor(heap, LeftChild(ancestor), descendant) ==> 
+                    IsAncestor(heap, ancestor, descendant);
+        
+        case right_descendants:
+            \forall Heap heap, integer ancestor, descendant;
+                0 <= ancestor < RightChild(ancestor) < descendant < HeapElementsCount(heap)
+                && IsAncestor(heap, RightChild(ancestor), descendant) ==> 
+                    IsAncestor(heap, ancestor, descendant);
+    }
+
+    lemma root_is_parent_of_all:
+         \forall Heap heap;
+            ValidHeap(heap) ==> 
+                \forall integer a,b,c;
+                    0 <= a < b < c < HeapElementsCount(heap)
+                    && HasHeapProperty(heap, a, b)
+                    && HasHeapProperty(heap, b, c) ==> 
+                        HasHeapProperty(heap, a, c);
+
+    lemma heap_ancestor_property:
+         \forall Heap heap;
+            ValidHeap(heap) ==> 
+                \forall integer a,b;
+                    0 <= a < b < HeapElementsCount(heap)
+                    && IsAncestor(heap, a, b)
+                    ==> HasHeapProperty(heap, a, b);
+            
+*/
+
+/*@
+    requires 0 < HeapElementsCount(heap);
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires ValidHeap(heap);
+    
+    assigns \nothing;
+
+    ensures extreme_existst:
+        \exists integer i;
+            0 <= i < HeapElementsCount(heap) ==>
+                \result == HeapElementValue(heap, i);
+    
+    ensures correct_extreme:
+        \forall integer i;
+            0 < i < HeapElementsCount(heap) ==>
+                HasHeapProperty(heap, 0, i);
+*/
+int HeapFindMin(Heap heap) {
+    return heap.elements[0];
+}
+
+/*@
     predicate HeapUpperChildCut(Heap heap, integer index) = 
         \forall integer ancestor, descendant;
             0 <= ancestor < descendant < HeapElementsCount(heap)

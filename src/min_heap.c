@@ -3,6 +3,8 @@
 #include <limits.h>
 #include <math.h>
 
+#include "min_heap.h"
+
 /*@
     ensures \result == \floor(x);
 */
@@ -12,30 +14,6 @@ extern double floor(double x);
     ensures \result == \ceil(x);
 */
 extern double ceil(double x);
-
-//                  root at 0           root at 1
-// Left child       2 * index + 1       2 * index
-// Right child      2 * index + 2       2 * index + 1
-// Parent           (index - 1) / 2     index / 2
-
-typedef struct _Heap {
-    int *elements;
-    int elementsCount;
-    int elementsCapacity;
-} Heap;
-
-/*@
-    logic int * HeapElements         (Heap heap)            = heap.elements;
-    logic int   HeapElementsCount    (Heap heap)            = heap.elementsCount;
-    logic int   HeapElementsCapacity (Heap heap)            = heap.elementsCapacity;
-    logic int   HeapElementValue     (Heap heap, integer i) = heap.elements[i];
-*/
-
-/*@
-    logic integer Parent     (integer child)  = (child - 1) / 2;
-    logic integer LeftChild  (integer parent) = 2 * parent + 1;
-    logic integer RightChild (integer parent) = 2 * parent + 2;
-*/
 
 /*@
     logic integer HeapInternalNodeCount(Heap heap) = \floor(HeapElementsCount(heap) / 2);
@@ -59,66 +37,6 @@ typedef struct _Heap {
     predicate HeapHasBothChildren(Heap heap, integer index) =
         HeapHasLeftChild(heap, index) && HeapHasRightChild(heap, index);
 */
-
-/*@
-    predicate IsLeftChild(integer child, integer parent) =
-        LeftChild(parent) == child;
-
-    predicate IsRightChild(integer child, integer parent) =
-        RightChild(parent) == child;
-
-    predicate IsChild(integer child, integer parent) =
-        IsLeftChild(child, parent) || IsRightChild(child, parent);
-
-    predicate IsParent(integer parent, integer child) =
-        Parent(child) == parent;
-*/
-
-/*@
-    predicate HasHeapProperty(Heap heap, integer parent, integer child) = 
-        HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
-*/
-
-/*@
-    inductive HasTransitiveHeapProperty(Heap heap, integer index) {
-        case node:
-            \forall Heap heap, integer index;
-                (HeapHasLeftChild(heap, index) ==> (
-                    HasTransitiveHeapProperty(heap, LeftChild(index))
-                    && HasHeapProperty(heap, index, LeftChild(index))
-                ))
-                && (HeapHasRightChild(heap, index) ==> (
-                    HasTransitiveHeapProperty(heap, RightChild(index))
-                    && HasHeapProperty(heap, index, RightChild(index))
-                )) ==> HasTransitiveHeapProperty(heap, index);
-    }
-*/
-
-/*@
-    // HasTransitiveHeapProperty(heap, 0)
-
-    predicate ValidHeap(Heap heap) =
-        \forall integer ancestor, descendant;
-            0 <= ancestor < descendant < HeapElementsCount(heap)
-            && IsParent(ancestor, descendant) ==>
-                HasHeapProperty(heap, ancestor, descendant);
-
-    // lemma root_valid_closure:
-    //     \forall Heap heap;
-    //         ValidHeap(heap) ==> 
-    //             \forall integer ancestor, descendant;
-    //                 0 <= ancestor < descendant < HeapElementsCount(heap)
-    //                 && IsParent(ancestor, descendant) ==>
-    //                     HasHeapProperty(heap, ancestor, descendant);
-
-    // predicate ValidHeap(Heap heap) =
-    //     (\forall integer ancestor, descendant;
-    //         0 <= ancestor < descendant < HeapElementsCount(heap)
-    //         && IsParent(ancestor, descendant) ==>
-    //             HasHeapProperty(heap, ancestor, descendant)
-    //     ) && (0 < HeapElementsCount(heap) ==> HasTransitiveHeapProperty(heap, 0));
-*/
-
 
 /*@
     requires \valid(a);
@@ -361,23 +279,6 @@ int HeapLowerChild(Heap heap, int parent) {
     }
 */
 
-/*@
-    requires 0 < HeapElementsCount(heap);
-    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
-    requires ValidHeap(heap);
-    
-    assigns \nothing;
-
-    ensures extreme_exists:
-        \exists integer i;
-            0 <= i < HeapElementsCount(heap) ==>
-                \result == HeapElementValue(heap, i);
-    
-    ensures correct_extreme:
-        \forall integer i;
-            0 < i < HeapElementsCount(heap) ==>
-                HasHeapProperty(heap, 0, i);
-*/
 int HeapFindMin(Heap heap) {
     return heap.elements[0];
 }
@@ -579,16 +480,6 @@ void HeapBubbleDown(Heap heap, int index) {
     }
 }
 
-/*@
-    requires 0 <= HeapElementsCount(heap) < HeapElementsCapacity(heap);
-    requires \valid(HeapElements(heap) + (0 .. HeapElementsCapacity(heap) - 1));
-    requires ValidHeap(heap);
-
-    assigns HeapElements(heap)[0..HeapElementsCount(heap)];
-
-    ensures count_increase: HeapElementsCount(\result) == HeapElementsCount(heap) + 1;
-    ensures ValidHeap(\result);
-*/
 Heap HeapInsert(Heap heap, int element) {
     int index = heap.elementsCount;
 
@@ -600,16 +491,6 @@ Heap HeapInsert(Heap heap, int element) {
     return heap;
 }
 
-/*@
-    requires 0 < HeapElementsCount(heap);
-    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
-    requires ValidHeap(heap);
-
-    assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
-
-    ensures count_decrease: HeapElementsCount(\result) == HeapElementsCount(heap) - 1;
-    ensures ValidHeap(\result);
-*/
 Heap HeapExtractMin(Heap heap) {
     int last = heap.elementsCount - 1;
 
@@ -624,14 +505,6 @@ Heap HeapExtractMin(Heap heap) {
     return heap;
 }
 
-/*@
-    requires 0 <= elementsCount <= elementsCapacity;
-    requires \valid(elements + (0 .. elementsCount - 1));
-
-    assigns elements[0 .. elementsCount - 1];
-
-    ensures ValidHeap(\result);
-*/
 Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity) {
     Heap heap;
     heap.elements = elements;
@@ -655,44 +528,4 @@ Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity) {
     }
     
     return heap;
-}
-
-void printHeap(Heap heap) {
-    printf("H:\t");
-    for(int i = 0; i < heap.elementsCount; i++) {
-        printf("%d ", heap.elements[i]);
-    }
-    printf("\n");
-}
-
-int main() {
-    int arr[100] = {2, 3, 5, 1, 4};
-    Heap heap = HeapBuild(arr, 5, 100);
-    printHeap(heap);
-
-    while (heap.elementsCount > 0) {
-        printf("M: %d\n", HeapFindMin(heap));
-        heap = HeapExtractMin(heap);
-        printHeap(heap);
-    }
-
-    int input;
-    while (heap.elementsCount < heap.elementsCapacity && scanf("%d", &input) == 1) {
-        heap = HeapInsert(heap, input);
-        printf("M: %d\n", HeapFindMin(heap));
-        printHeap(heap);
-    }
-
-    if (heap.elementsCount == heap.elementsCapacity) {
-        printf("You have exceeded allocated capacity\n");
-        return 1;
-    }
-
-    while (heap.elementsCount > 0) {
-        printf("M: %d\n", HeapFindMin(heap));
-        heap = HeapExtractMin(heap);
-        printHeap(heap);
-    }
-
-    return 0;
 }

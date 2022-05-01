@@ -2338,3 +2338,58 @@ Heap testHeapBubbleDown7(Heap heap, int index) {
 
     return heap;
 }
+
+
+
+
+/*@
+    // --- ValidHeap
+    // \forall integer ancestor, descendant;
+    //     0 <= ancestor < descendant < HeapElementsCount(heap)
+    //     && IsParent(ancestor, descendant) ==>
+    //         HasHeapProperty(heap, ancestor, descendant);
+
+
+    inductive HasElementOnPath(Heap heap, integer element, integer index) {
+        case child:
+            \forall Heap heap, integer element, child;
+                0 < child < HeapElementsCount(heap)
+                && IsParent(element, child) ==>
+                    HasElementOnPath(heap, element, child);
+        
+        case parent:
+            \forall Heap heap, integer element, child;
+                0 < child < HeapElementsCount(heap)
+                && HasElementOnPath(heap, element, Parent(child)) ==>
+                    HasElementOnPath(heap, element, child);
+    }
+*/
+
+/*@
+    // 87 works (with 30s timeout)
+    requires 
+        HeapElementsCount(heap) == 88
+        && \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1))
+        && ValidHeap(heap);
+
+    assigns \nothing;
+*/
+void testIsAncestor(Heap heap) {
+    // assert HasTransitiveHeapProperty(heap, 1);
+    // assert HasTransitiveHeapProperty(heap, 2);
+    //@ assert HasElementOnPath(heap, 0, 1);
+    //@ assert HasElementOnPath(heap, 0, 2);
+    //@ assert HasElementOnPath(heap, 0, 3);
+    //@ assert HasElementOnPath(heap, 0, 4);
+    //@ assert HasElementOnPath(heap, 0, 5);
+    //@ assert HasElementOnPath(heap, 0, 6);
+    //@ assert HasElementOnPath(heap, 0, 7);
+    //@ assert HasElementOnPath(heap, 0, 8);
+    //@ assert HasElementOnPath(heap, 0, 9);
+
+    /*@ assert 
+        \forall integer i;
+            0 < i < HeapElementsCount(heap) ==> 
+                HasElementOnPath(heap, 0, i);
+    */
+}

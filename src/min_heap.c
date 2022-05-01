@@ -657,36 +657,42 @@ Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity) {
     return heap;
 }
 
-// void printHeap(Heap heap) {
-//     printf("P:\t");
-//     for(int i = 0; i < heap.elementsCount; i++) {
-//         printf("%d ", heap.elements[i]);
-//     }
-//     printf("\n");
-// }
+void printHeap(Heap heap) {
+    printf("H:\t");
+    for(int i = 0; i < heap.elementsCount; i++) {
+        printf("%d ", heap.elements[i]);
+    }
+    printf("\n");
+}
 
-// int main() {
-//     int arr[5] = {2, 3, 5, 1, 4};
-//     Heap heap = HeapBuild(arr, 5, 5);
-//     printHeap(heap);
-    
-//     printf("%d\n", heap.elements[0]);
-//     heap = HeapExtractMin(heap);
-//     printHeap(heap);
+int main() {
+    int arr[100] = {2, 3, 5, 1, 4};
+    Heap heap = HeapBuild(arr, 5, 100);
+    printHeap(heap);
 
-//     printf("%d\n", heap.elements[0]);
-//     heap = HeapExtractMin(heap);
-//     printHeap(heap);
+    while (heap.elementsCount > 0) {
+        printf("M: %d\n", HeapFindMin(heap));
+        heap = HeapExtractMin(heap);
+        printHeap(heap);
+    }
 
-//     printf("%d\n", heap.elements[0]);
-//     heap = HeapExtractMin(heap);
-//     printHeap(heap);
+    int input;
+    while (heap.elementsCount < heap.elementsCapacity && scanf("%d", &input) == 1) {
+        heap = HeapInsert(heap, input);
+        printf("M: %d\n", HeapFindMin(heap));
+        printHeap(heap);
+    }
 
-//     printf("%d\n", heap.elements[0]);
-//     heap = HeapExtractMin(heap);
-//     printHeap(heap);
+    if (heap.elementsCount == heap.elementsCapacity) {
+        printf("You have exceeded allocated capacity\n");
+        return 1;
+    }
 
-//     printf("%d\n", heap.elements[0]);
-//     heap = HeapExtractMin(heap);
-//     printHeap(heap);
-// }
+    while (heap.elementsCount > 0) {
+        printf("M: %d\n", HeapFindMin(heap));
+        heap = HeapExtractMin(heap);
+        printHeap(heap);
+    }
+
+    return 0;
+}

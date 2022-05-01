@@ -39,6 +39,26 @@ extern double ceil(double x);
 */
 
 /*@
+    lemma heap_propetry_transitive_left_child:
+        \forall Heap heap, integer element;
+            0 < element < HeapElementsCount(heap)
+            && HasHeapProperty(heap, Parent(element), element)
+            && HeapHasLeftChild(heap, element)
+            && HasHeapProperty(heap, element, LeftChild(element)) ==> 
+                HasHeapProperty(heap, Parent(element), LeftChild(element));
+
+    lemma heap_propetry_transitive_right_child:
+        \forall Heap heap, integer element;
+            0 < element < HeapElementsCount(heap)
+            && HasHeapProperty(heap, Parent(element), element)
+            && HeapHasRightChild(heap, element)
+            && HasHeapProperty(heap, element, RightChild(element)) ==> 
+                HasHeapProperty(heap, Parent(element), RightChild(element));
+*/
+
+// ------------------------------------------------------------
+
+/*@
     requires \valid(a);
     requires \valid(b);
 
@@ -503,6 +523,47 @@ Heap HeapExtractMin(Heap heap) {
     }
 
     return heap;
+}
+
+/*@
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires 0 <= index < HeapElementsCount(heap);
+    requires value <= HeapElementValue(heap, index);
+    requires ValidHeap(heap);
+
+    assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+
+    ensures value_changed: 
+        \exists integer i;
+            0 <= i < HeapElementsCount(heap) ==>
+                value == HeapElementValue(heap, i);
+    ensures ValidHeap(heap);
+*/
+void HeapDecrease(Heap heap, int index, int value) {
+    heap.elements[index] = value;
+
+    HeapBubbleUp(heap, index);
+}
+
+
+/*@
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires 0 <= index < HeapElementsCount(heap);
+    requires HeapElementValue(heap, index) <= value;
+    requires ValidHeap(heap);
+
+    assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+
+    ensures value_changed: 
+        \exists integer i;
+            0 <= i < HeapElementsCount(heap) ==>
+                value == HeapElementValue(heap, i);
+    ensures ValidHeap(heap);
+*/
+void HeapIncrease(Heap heap, int index, int value) {
+    heap.elements[index] = value;
+
+    HeapBubbleDown(heap, index);
 }
 
 Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity) {

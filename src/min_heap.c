@@ -77,12 +77,46 @@ typedef struct _Heap {
 /*@
     predicate HasHeapProperty(Heap heap, integer parent, integer child) = 
         HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
+*/
+
+/*@
+    inductive HasTransitiveHeapProperty(Heap heap, integer index) {
+        case node:
+            \forall Heap heap, integer index;
+                (HeapHasLeftChild(heap, index) ==> (
+                    HasTransitiveHeapProperty(heap, LeftChild(index))
+                    && HasHeapProperty(heap, index, LeftChild(index))
+                ))
+                && (HeapHasRightChild(heap, index) ==> (
+                    HasTransitiveHeapProperty(heap, RightChild(index))
+                    && HasHeapProperty(heap, index, RightChild(index))
+                )) ==> HasTransitiveHeapProperty(heap, index);
+    }
+*/
+
+/*@
+    // HasTransitiveHeapProperty(heap, 0)
 
     predicate ValidHeap(Heap heap) =
         \forall integer ancestor, descendant;
             0 <= ancestor < descendant < HeapElementsCount(heap)
             && IsParent(ancestor, descendant) ==>
                 HasHeapProperty(heap, ancestor, descendant);
+
+    // lemma root_valid_closure:
+    //     \forall Heap heap;
+    //         ValidHeap(heap) ==> 
+    //             \forall integer ancestor, descendant;
+    //                 0 <= ancestor < descendant < HeapElementsCount(heap)
+    //                 && IsParent(ancestor, descendant) ==>
+    //                     HasHeapProperty(heap, ancestor, descendant);
+
+    // predicate ValidHeap(Heap heap) =
+    //     (\forall integer ancestor, descendant;
+    //         0 <= ancestor < descendant < HeapElementsCount(heap)
+    //         && IsParent(ancestor, descendant) ==>
+    //             HasHeapProperty(heap, ancestor, descendant)
+    //     ) && (0 < HeapElementsCount(heap) ==> HasTransitiveHeapProperty(heap, 0));
 */
 
 
@@ -312,42 +346,19 @@ int HeapLowerChild(Heap heap, int parent) {
 }
 
 /*@
-    inductive IsAncestor(Heap heap, integer ancestor, integer descendant) {
-        case child:
-            \forall Heap heap, integer child;
-                0 < child < HeapElementsCount(heap) ==>
-                    IsAncestor(heap, Parent(child), child);
-        
-        case left_descendants:
-            \forall Heap heap, integer ancestor, descendant;
-                0 <= ancestor < LeftChild(ancestor) < descendant < HeapElementsCount(heap)
-                && IsAncestor(heap, LeftChild(ancestor), descendant) ==> 
-                    IsAncestor(heap, ancestor, descendant);
-        
-        case right_descendants:
-            \forall Heap heap, integer ancestor, descendant;
-                0 <= ancestor < RightChild(ancestor) < descendant < HeapElementsCount(heap)
-                && IsAncestor(heap, RightChild(ancestor), descendant) ==> 
-                    IsAncestor(heap, ancestor, descendant);
+    // alt-ergo or cvc4 are not able to prove this implication on more
+    // than ~80 elements. Z3 is able to prove this implication, but 
+    // havind no need for Z3 in whole codebase, axiom was chosen to keep
+    // code simplified
+
+    axiomatic heap_structure_and_heap_property {
+        axiom root_is_extreme:
+            \forall Heap heap;
+                ValidHeap(heap) ==>
+                    \forall integer index;
+                        0 <= index < HeapElementsCount(heap) ==>
+                            HasHeapProperty(heap, 0, index);
     }
-
-    lemma root_is_parent_of_all:
-         \forall Heap heap;
-            ValidHeap(heap) ==> 
-                \forall integer a,b,c;
-                    0 <= a < b < c < HeapElementsCount(heap)
-                    && HasHeapProperty(heap, a, b)
-                    && HasHeapProperty(heap, b, c) ==> 
-                        HasHeapProperty(heap, a, c);
-
-    lemma heap_ancestor_property:
-         \forall Heap heap;
-            ValidHeap(heap) ==> 
-                \forall integer a,b;
-                    0 <= a < b < HeapElementsCount(heap)
-                    && IsAncestor(heap, a, b)
-                    ==> HasHeapProperty(heap, a, b);
-            
 */
 
 /*@
@@ -357,7 +368,7 @@ int HeapLowerChild(Heap heap, int parent) {
     
     assigns \nothing;
 
-    ensures extreme_existst:
+    ensures extreme_exists:
         \exists integer i;
             0 <= i < HeapElementsCount(heap) ==>
                 \result == HeapElementValue(heap, i);

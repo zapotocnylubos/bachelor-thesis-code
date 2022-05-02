@@ -1,17 +1,27 @@
 #ifndef ZAPOTOCNYLUBOS_MIN_HEAP_H
 #define ZAPOTOCNYLUBOS_MIN_HEAP_H
 
+typedef struct _HeapElement {
+    int id;
+    int value;
+} HeapElement;
+
+/*@
+    logic int HeapElementId(HeapElement element) = element.id;
+    logic int HeapElementValue(HeapElement element) = element.value;
+*/
+
 typedef struct _Heap {
-    int *elements;
+    HeapElement *elements;
     int elementsCount;
     int elementsCapacity;
 } Heap;
 
 /*@
-    logic int *HeapElements(Heap heap) = heap.elements;
+    logic HeapElement *HeapElements(Heap heap) = heap.elements;
     logic int HeapElementsCount(Heap heap) = heap.elementsCount;
     logic int HeapElementsCapacity(Heap heap) = heap.elementsCapacity;
-    logic int HeapElementValue(Heap heap, integer i) = heap.elements[i];
+    logic int HeapElementValue(Heap heap, integer i) = HeapElementValue(heap.elements[i]);
 */
 
 /*@
@@ -25,12 +35,12 @@ typedef struct _Heap {
     predicate IsRightChild(integer child, integer parent) = RightChild(parent) == child;
     predicate IsParent(integer parent, integer child) = Parent(child) == parent;
 
-    predicate IsChild(integer child, integer parent) = 
+    predicate IsChild(integer child, integer parent) =
         IsLeftChild(child, parent) || IsRightChild(child, parent);
 */
 
 /*@
-    predicate HasHeapProperty(Heap heap, integer parent, integer child) = 
+    predicate HasHeapProperty(Heap heap, integer parent, integer child) =
         HeapElementValue(heap, parent) <= HeapElementValue(heap, child);
 */
 
@@ -48,20 +58,20 @@ typedef struct _Heap {
     requires 0 < HeapElementsCount(heap);
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
     requires ValidHeap(heap);
-    
+
     assigns \nothing;
 
     ensures extreme_exists:
         \exists integer i;
             0 <= i < HeapElementsCount(heap) ==>
-                \result == HeapElementValue(heap, i);
-    
+                \result == HeapElements(heap)[i];
+
     ensures correct_extreme:
         \forall integer i;
             0 < i < HeapElementsCount(heap) ==>
                 HasHeapProperty(heap, 0, i);
 */
-int HeapFindMin(Heap heap);
+HeapElement HeapFindMin(Heap heap);
 
 /*@
     requires 0 <= HeapElementsCount(heap) < HeapElementsCapacity(heap);
@@ -73,7 +83,7 @@ int HeapFindMin(Heap heap);
     ensures count_increase: HeapElementsCount(\result) == HeapElementsCount(heap) + 1;
     ensures ValidHeap(\result);
 */
-Heap HeapInsert(Heap heap, int element);
+Heap HeapInsert(Heap heap, HeapElement element);
 
 /*@
     requires 0 < HeapElementsCount(heap);
@@ -88,6 +98,21 @@ Heap HeapInsert(Heap heap, int element);
 Heap HeapExtractMin(Heap heap);
 
 /*@
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires 0 <= index < HeapElementsCount(heap);
+    requires ValidHeap(heap);
+
+    assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
+
+    ensures value_changed:
+        \exists integer i;
+            0 <= i < HeapElementsCount(heap) ==>
+                HeapElementValue(element) == HeapElementValue(heap, i);
+    ensures ValidHeap(heap);
+*/
+void HeapChange(Heap heap, int index, HeapElement element);
+
+/*@
     requires 0 <= elementsCount <= elementsCapacity;
     requires \valid(elements + (0 .. elementsCount - 1));
 
@@ -97,6 +122,6 @@ Heap HeapExtractMin(Heap heap);
     ensures capacity_same: HeapElementsCapacity(\result) == elementsCapacity;
     ensures ValidHeap(\result);
 */
-Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity);
+Heap HeapBuild(HeapElement *elements, int elementsCount, int elementsCapacity);
 
 #endif //ZAPOTOCNYLUBOS_MIN_HEAP_H

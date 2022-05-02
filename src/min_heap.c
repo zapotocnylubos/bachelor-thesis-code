@@ -59,16 +59,38 @@ extern double ceil(double x);
 // ------------------------------------------------------------
 
 /*@
+    assigns \nothing;
+
+    ensures \result == HeapElementValue(element);
+*/
+int _HeapElementValue(HeapElement element) {
+    return element.value;
+}
+
+/*@
+    requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
+    requires 0 <= index < HeapElementsCount(heap);
+
+    assigns \nothing;
+
+    ensures \result == HeapElementValue(heap, index);
+*/
+int HeapElementValue(Heap heap, int index) {
+    return _HeapElementValue(heap.elements[index]);
+}
+
+/*@
     requires \valid(a);
     requires \valid(b);
+    requires \separated(a, b);
 
     assigns *a, *b;
 
     ensures *a == \old(*b);
     ensures *b == \old(*a);
 */
-void swap(int *a, int *b) {
-    int tmp = *a;
+void swap(HeapElement *a, HeapElement *b) {
+    HeapElement tmp = *a;
     *a = *b;
     *b = tmp;
 }
@@ -85,8 +107,9 @@ void swap(int *a, int *b) {
     ensures HeapElements(heap)[b] == \old(HeapElements(heap)[a]);
 */
 void HeapSwap(Heap heap, int a, int b) {
-    swap(heap.elements + a, heap.elements + b);
-    heap.advertiseSwap(a, b);
+    if (a != b) {
+        swap(heap.elements + a, heap.elements + b);
+    }
 }
 
 /*@
@@ -289,7 +312,7 @@ int HeapLowerChild(Heap heap, int parent) {
     int rightChild = HeapRightChild(parent);
 
     if (HeapHasBothChildren(heap, parent)) {
-        if (heap.elements[leftChild] <= heap.elements[rightChild]) {
+        if (HeapElementValue(heap, leftChild) <= HeapElementValue(heap, rightChild)) {
             return leftChild;
         }
 
@@ -315,7 +338,7 @@ int HeapLowerChild(Heap heap, int parent) {
     }
 */
 
-int HeapFindMin(Heap heap) {
+HeapElement HeapFindMin(Heap heap) {
     return heap.elements[0];
 }
 
@@ -380,7 +403,7 @@ void HeapBubbleUp(Heap heap, int index) {
     while (HeapHasParent(heap, index)) {
         parent = HeapParent(index);
 
-        if (heap.elements[parent] <= heap.elements[index]) {
+        if (HeapElementValue(heap, parent) <= HeapElementValue(heap, index)) {
             break;
         }
 
@@ -497,7 +520,7 @@ void HeapBubbleDown(Heap heap, int index) {
     while (HeapHasChild(heap, index)) {
         child = HeapLowerChild(heap, index);
 
-        if (heap.elements[index] <= heap.elements[child]) {
+        if (HeapElementValue(heap, index) <= HeapElementValue(heap, child)) {
             break;
         }
 
@@ -516,7 +539,7 @@ void HeapBubbleDown(Heap heap, int index) {
     }
 }
 
-Heap HeapInsert(Heap heap, int element) {
+Heap HeapInsert(Heap heap, HeapElement element) {
     int index = heap.elementsCount;
 
     heap.elements[index] = element;
@@ -544,7 +567,7 @@ Heap HeapExtractMin(Heap heap) {
 /*@
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
     requires 0 <= index < HeapElementsCount(heap);
-    requires value <= HeapElementValue(heap, index);
+    requires HeapElementValue(element) <= HeapElementValue(heap, index);
     requires ValidHeap(heap);
 
     assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
@@ -552,11 +575,11 @@ Heap HeapExtractMin(Heap heap) {
     ensures value_changed:
         \exists integer i;
             0 <= i < HeapElementsCount(heap) ==>
-                value == HeapElementValue(heap, i);
+                HeapElementValue(element) == HeapElementValue(heap, i);
     ensures ValidHeap(heap);
 */
-void HeapDecrease(Heap heap, int index, int value) {
-    heap.elements[index] = value;
+void HeapDecrease(Heap heap, int index, HeapElement element) {
+    heap.elements[index] = element;
 
     HeapBubbleUp(heap, index);
 }
@@ -564,7 +587,7 @@ void HeapDecrease(Heap heap, int index, int value) {
 /*@
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCount(heap) - 1));
     requires 0 <= index < HeapElementsCount(heap);
-    requires HeapElementValue(heap, index) <= value;
+    requires HeapElementValue(heap, index) <= HeapElementValue(element);
     requires ValidHeap(heap);
 
     assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
@@ -572,30 +595,29 @@ void HeapDecrease(Heap heap, int index, int value) {
     ensures value_changed:
         \exists integer i;
             0 <= i < HeapElementsCount(heap) ==>
-                value == HeapElementValue(heap, i);
+                HeapElementValue(element) == HeapElementValue(heap, i);
     ensures ValidHeap(heap);
 */
-void HeapIncrease(Heap heap, int index, int value) {
-    heap.elements[index] = value;
+void HeapIncrease(Heap heap, int index, HeapElement element) {
+    heap.elements[index] = element;
 
     HeapBubbleDown(heap, index);
 }
 
-void HeapChange(Heap heap, int index, int value) {
-    if (value < heap.elements[index]) {
-        HeapDecrease(heap, index, value);
+void HeapChange(Heap heap, int index, HeapElement element) {
+    if (_HeapElementValue(element) < HeapElementValue(heap, index)) {
+        HeapDecrease(heap, index, element);
         return;
     }
 
-    HeapIncrease(heap, index, value);
+    HeapIncrease(heap, index, element);
 }
 
-Heap HeapBuild(int *elements, int elementsCount, int elementsCapacity, void (*advertiseSwap)(int, int)) {
+Heap HeapBuild(HeapElement *elements, int elementsCount, int elementsCapacity) {
     Heap heap;
     heap.elements = elements;
     heap.elementsCount = elementsCount;
     heap.elementsCapacity = elementsCapacity;
-    heap.advertiseSwap = advertiseSwap;
 
     /*@
         loop invariant -1 <= index <= ((int)\floor(HeapElementsCount(heap) / 2)) - 1;

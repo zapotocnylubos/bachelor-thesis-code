@@ -82,6 +82,21 @@ int HeapElementValue(Heap heap, int index) {
 /*@
     requires \valid(a);
     requires \valid(b);
+
+    assigns *a, *b;
+
+    ensures *a == \old(*b);
+    ensures *b == \old(*a);
+*/
+void swapi(int *a, int *b) {
+    int tmp = *a;
+    *a = *b;
+    *b = tmp;
+}
+
+/*@
+    requires \valid(a);
+    requires \valid(b);
     requires \separated(a, b);
 
     assigns *a, *b;
@@ -89,7 +104,7 @@ int HeapElementValue(Heap heap, int index) {
     ensures *a == \old(*b);
     ensures *b == \old(*a);
 */
-void swap(HeapElement *a, HeapElement *b) {
+void swapHeapElements(HeapElement *a, HeapElement *b) {
     HeapElement tmp = *a;
     *a = *b;
     *b = tmp;
@@ -103,12 +118,22 @@ void swap(HeapElement *a, HeapElement *b) {
 
     assigns HeapElements(heap)[a], HeapElements(heap)[b];
 
-    ensures HeapElements(heap)[a] == \old(HeapElements(heap)[b]);
-    ensures HeapElements(heap)[b] == \old(HeapElements(heap)[a]);
+    ensures indexes_swapped_a:
+        HeapElementIndex(heap, a) == \old(HeapElementIndex(heap, a));
+    
+    ensures indexes_swapped_b:
+        HeapElementIndex(heap, b) == \old(HeapElementIndex(heap, b));
+
+    ensures HeapElementId(heap, a) == \old(HeapElementId(heap, b));
+    ensures HeapElementId(heap, b) == \old(HeapElementId(heap, a));
+
+    ensures HeapElementValue(heap, a) == \old(HeapElementValue(heap, b));
+    ensures HeapElementValue(heap, b) == \old(HeapElementValue(heap, a));
 */
 void HeapSwap(Heap heap, int a, int b) {
     if (a != b) {
-        swap(heap.elements + a, heap.elements + b);
+        swapi(&(heap.elements[a].index), &(heap.elements[b].index));
+        swapHeapElements(heap.elements + a, heap.elements + b);
     }
 }
 

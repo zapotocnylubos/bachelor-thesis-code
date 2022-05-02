@@ -2,11 +2,14 @@
 #define ZAPOTOCNYLUBOS_MIN_HEAP_H
 
 typedef struct _HeapElement {
+    int index;
+
     int id;
     int value;
 } HeapElement;
 
 /*@
+    logic int HeapElementIndex(HeapElement element) = element.index;
     logic int HeapElementId(HeapElement element) = element.id;
     logic int HeapElementValue(HeapElement element) = element.value;
 */
@@ -21,6 +24,9 @@ typedef struct _Heap {
     logic HeapElement *HeapElements(Heap heap) = heap.elements;
     logic int HeapElementsCount(Heap heap) = heap.elementsCount;
     logic int HeapElementsCapacity(Heap heap) = heap.elementsCapacity;
+
+    logic int HeapElementIndex(Heap heap, integer i) = HeapElementIndex(heap.elements[i]);
+    logic int HeapElementId(Heap heap, integer i) = HeapElementId(heap.elements[i]);
     logic int HeapElementValue(Heap heap, integer i) = HeapElementValue(heap.elements[i]);
 */
 
@@ -77,6 +83,7 @@ HeapElement HeapFindMin(Heap heap);
     requires 0 <= HeapElementsCount(heap) < HeapElementsCapacity(heap);
     requires \valid(HeapElements(heap) + (0 .. HeapElementsCapacity(heap) - 1));
     requires ValidHeap(heap);
+    requires correctly_indexed: HeapElementIndex(element) == HeapElementsCount(heap);
 
     assigns HeapElements(heap)[0..HeapElementsCount(heap)];
 
@@ -115,6 +122,10 @@ void HeapChange(Heap heap, int index, HeapElement element);
 /*@
     requires 0 <= elementsCount <= elementsCapacity;
     requires \valid(elements + (0 .. elementsCount - 1));
+    requires correctly_indexed:
+        \forall integer i;
+            0 <= i < elementsCount ==>
+                HeapElementIndex(elements[i]) == i;
 
     assigns elements[0 .. elementsCount - 1];
 

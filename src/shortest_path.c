@@ -1,26 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #include "min_heap.h"
-
-typedef struct _Vertex Vertex;
 
 typedef struct {
     int toVertexId;
     int weight;
 } Edge;
-
-typedef enum {
-    NOT_FOUND, 
-    OPENED, 
-    CLOSED
-} VertexState;
-
-struct _Vertex {
-    int id;
-    VertexState state;
-};
 
 typedef struct _VertexListNode {
     Edge edge;
@@ -28,8 +16,10 @@ typedef struct _VertexListNode {
 } VertexListNode;
 
 typedef struct _VertexList {
-    Vertex vertex;
+    HeapElement *vertex;
     VertexListNode *neighbors;
+
+    int extracted;
     int predecesorVertexId;
 } VertexList;
 
@@ -48,13 +38,22 @@ void printVertices(VertexList *vertices, int verticesCount) {
                 printf(", ");
             }
 
-            printf("->%d[%d]", node->edge.toVertexId, node->edge.weight);
+            printf("%d[%d]", node->edge.toVertexId, node->edge.weight);
             node = node->next;
             isFirst = 0;
         }
 
         printf("\n");
     }
+}
+
+void printShortesPath(VertexList *vertices, int endVertexId) {
+    if(endVertexId == -1) {
+        return;
+    }
+
+    printShortesPath(vertices, vertices[endVertexId].predecesorVertexId);
+    printf("%d\n", endVertexId);
 }
 
 int main (int argc, char *argv[]) {
@@ -102,11 +101,15 @@ int main (int argc, char *argv[]) {
     }
 
     int fromVertexId, toVertexId, weight;
-    while (
-        scanf("%d %d %d", &fromVertexId, &toVertexId, &weight) == 3 
-        && isValidVertexId(fromVertexId, verticesCount) 
-        && isValidVertexId(toVertexId, verticesCount)
-    ) {
+    while (scanf("%d %d %d", &fromVertexId, &toVertexId, &weight) == 3) {
+        if (!isValidVertexId(fromVertexId, verticesCount)
+            || !isValidVertexId(toVertexId, verticesCount)
+            || weight < 0
+        ) {
+            printf("Invalid input\n");
+            return 1;
+        }
+
         Edge edge = { .toVertexId = toVertexId, .weight = weight };
         
         VertexListNode *listNode = (VertexListNode *) malloc (sizeof(VertexListNode));
@@ -125,43 +128,48 @@ int main (int argc, char *argv[]) {
         printVertices(vertices, verticesCount);
     }
 
+    HeapElement *heapElements = (HeapElement *) malloc (verticesCount * sizeof(HeapElement));
+    
+    for (int i = 0; i < verticesCount; i++) {
+        HeapElement *element = heapElements + i;
+        element->index = i;
+        element->id = i;
+        element->value = INT_MAX;
+        
+        vertices[i].vertex = element;
+        vertices[i].extracted = 0;
+        vertices[i].predecesorVertexId = -1;
+    }
 
+    vertices[startVertexId].vertex->value = 0;
 
+    Heap heap = HeapBuild(heapElements, verticesCount, verticesCount);
+    
+    while (0 < heap.elementsCount) {
+        HeapElement v = HeapFindMin(heap);
+        heap = HeapExtractMin(heap);
+        vertices[v.id].extracted = 1;
 
-    // // for()
+        VertexListNode *w = vertices[v.id].neighbors;
+        while (w != NULL) {
+            if (!vertices[w->edge.toVertexId].extracted 
+                && vertices[w->edge.toVertexId].vertex->value > vertices[v.id].vertex->value + w->edge.weight
+            ) {
+                vertices[w->edge.toVertexId].predecesorVertexId = v.id;
+                HeapElement element = *vertices[w->edge.toVertexId].vertex;
+                element.value = vertices[v.id].vertex->value + w->edge.weight;
+                HeapChange(heap, w->edge.toVertexId, element);
+            }
 
-    // int arr[100] = {2, 3, 5, 1, 4};
-    // Heap heap = HeapBuild(arr, 5, 100);
-    // // printHeap(heap);
+            w = w->next;
+        }
+    }
 
-    // /*@
-    //     loop invariant 0 <= HeapElementsCount(heap);
-    //     loop assigns heap, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
-    //     loop variant HeapElementsCount(heap);
-    // */
-    // while (heap.elementsCount > 0) {
-    //     // printf("M: %d\n", HeapFindMin(heap));
-    //     heap = HeapExtractMin(heap);
-    //     // printHeap(heap);
-    // }
+    if (interactive) {
+        printf("Shortes path:\n");
+    }
 
-    // int input;
-    // while (heap.elementsCount < heap.elementsCapacity && scanf("%d", &input) == 1) {
-    //     heap = HeapInsert(heap, input);
-    //     // printf("M: %d\n", HeapFindMin(heap));
-    //     // printHeap(heap);
-    // }
-
-    // if (heap.elementsCount == heap.elementsCapacity) {
-    //     // printf("You have exceeded allocated capacity\n");
-    //     return 1;
-    // }
-
-    // while (heap.elementsCount > 0) {
-    //     // printf("M: %d\n", HeapFindMin(heap));
-    //     heap = HeapExtractMin(heap);
-    //     // printHeap(heap);
-    // }
-
+    printShortesPath(vertices, endVertexId);
+    
     return 0;
 }

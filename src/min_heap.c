@@ -432,9 +432,9 @@ void HeapBubbleUp(Heap heap, int index) {
             break;
         }
 
-        /*@ assert heap_cut_grandparent_invariant:
-                HeapHasParent(heap, parent) ==>
-                    HasHeapProperty(heap, Parent(parent), parent);
+        /*
+            These asserts help provers to prove these loop invariants:
+            - 'HeapUpperChildCut'
         */
 
         /*@ assert heap_cut_parent_heap_property_right_child:

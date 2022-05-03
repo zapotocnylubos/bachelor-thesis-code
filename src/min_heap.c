@@ -389,12 +389,12 @@ HeapElement HeapFindMin(Heap heap) {
     requires HeapUpperChildCut(heap, index);
     requires HeapLowerChildCut(heap, index);
 
-    requires heap_cut_valid_heap_property_left_child:
+    requires heap_lower_child_cut_valid_heap_property_left_child:
         HeapHasParent(heap, index)
         && HeapHasLeftChild(heap, index) ==>
             HasHeapProperty(heap, Parent(index), LeftChild(index));
 
-    requires heap_cut_valid_heap_property_right_child:
+    requires heap_lower_child_cut_valid_heap_property_right_child:
         HeapHasParent(heap, index)
         && HeapHasRightChild(heap, index) ==>
             HasHeapProperty(heap, Parent(index), RightChild(index));
@@ -411,12 +411,12 @@ void HeapBubbleUp(Heap heap, int index) {
         loop invariant HeapUpperChildCut(heap, index);
         loop invariant HeapLowerChildCut(heap, index);
 
-        loop invariant heap_cut_valid_heap_property_left_child:
+        loop invariant heap_lower_child_cut_valid_heap_property_left_child:
             HeapHasParent(heap, index)
             && HeapHasLeftChild(heap, index) ==>
                 HasHeapProperty(heap, Parent(index), LeftChild(index));
 
-        loop invariant heap_cut_valid_heap_property_right_child:
+        loop invariant heap_lower_child_cut_valid_heap_property_right_child:
             HeapHasParent(heap, index)
             && HeapHasRightChild(heap, index) ==>
                 HasHeapProperty(heap, Parent(index), RightChild(index));

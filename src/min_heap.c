@@ -381,6 +381,16 @@ HeapElement HeapFindMin(Heap heap) {
             && index < descendant
             && IsParent(ancestor, descendant) ==>
                 HasHeapProperty(heap, ancestor, descendant);
+
+    predicate HeapLowerChildCutHeapPropertyLeftChild(Heap heap, integer index) = 
+        HeapHasParent(heap, index)
+        && HeapHasLeftChild(heap, index) ==>
+            HasHeapProperty(heap, Parent(index), LeftChild(index));
+
+    predicate HeapLowerChildCutHeapPropertyRightChild(Heap heap, integer index) =
+        HeapHasParent(heap, index)
+        && HeapHasRightChild(heap, index) ==>
+            HasHeapProperty(heap, Parent(index), RightChild(index));
 */
 
 /*@
@@ -388,16 +398,8 @@ HeapElement HeapFindMin(Heap heap) {
     requires 0 <= index < HeapElementsCount(heap);
     requires HeapUpperChildCut(heap, index);
     requires HeapLowerChildCut(heap, index);
-
-    requires heap_lower_child_cut_valid_heap_property_left_child:
-        HeapHasParent(heap, index)
-        && HeapHasLeftChild(heap, index) ==>
-            HasHeapProperty(heap, Parent(index), LeftChild(index));
-
-    requires heap_lower_child_cut_valid_heap_property_right_child:
-        HeapHasParent(heap, index)
-        && HeapHasRightChild(heap, index) ==>
-            HasHeapProperty(heap, Parent(index), RightChild(index));
+    requires HeapLowerChildCutHeapPropertyLeftChild(heap, index);
+    requires HeapLowerChildCutHeapPropertyRightChild(heap, index);
 
     assigns HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
 
@@ -410,16 +412,8 @@ void HeapBubbleUp(Heap heap, int index) {
         loop invariant 0 <= index < HeapElementsCount(heap);
         loop invariant HeapUpperChildCut(heap, index);
         loop invariant HeapLowerChildCut(heap, index);
-
-        loop invariant heap_lower_child_cut_valid_heap_property_left_child:
-            HeapHasParent(heap, index)
-            && HeapHasLeftChild(heap, index) ==>
-                HasHeapProperty(heap, Parent(index), LeftChild(index));
-
-        loop invariant heap_lower_child_cut_valid_heap_property_right_child:
-            HeapHasParent(heap, index)
-            && HeapHasRightChild(heap, index) ==>
-                HasHeapProperty(heap, Parent(index), RightChild(index));
+        loop invariant HeapLowerChildCutHeapPropertyLeftChild(heap, index);
+        loop invariant HeapLowerChildCutHeapPropertyRightChild(heap, index);
 
         loop assigns index, parent, HeapElements(heap)[0 .. HeapElementsCount(heap) - 1];
 

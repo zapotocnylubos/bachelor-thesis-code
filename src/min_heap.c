@@ -595,6 +595,7 @@ Heap HeapExtractMin(Heap heap) {
     ensures ValidHeap(heap);
 */
 void HeapDecrease(Heap heap, int index, HeapElement element) {
+    element.index = index;
     heap.elements[index] = element;
 
     HeapBubbleUp(heap, index);
@@ -615,6 +616,7 @@ void HeapDecrease(Heap heap, int index, HeapElement element) {
     ensures ValidHeap(heap);
 */
 void HeapIncrease(Heap heap, int index, HeapElement element) {
+    element.index = index;
     heap.elements[index] = element;
 
     HeapBubbleDown(heap, index);

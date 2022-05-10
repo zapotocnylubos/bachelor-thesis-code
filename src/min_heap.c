@@ -363,7 +363,7 @@ int HeapLowerChild(Heap heap, int parent) {
 /*@
     // alt-ergo or cvc4 are not able to prove this implication on more
     // than ~80 elements. Z3 is able to prove this implication, but
-    // havind no need for Z3 in whole codebase, axiom was chosen to keep
+    // having no need for Z3 in whole codebase, axiom was chosen to keep
     // code simplified
 
     axiomatic heap_structure_and_heap_property {

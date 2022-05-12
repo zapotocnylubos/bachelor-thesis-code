@@ -8,17 +8,17 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       # HTTP entrypotin and redirection to HTTPS
-      - "--entrypoints.web.address=:8888"
+      - "--entrypoints.web.address=:80"
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
       - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
       # HTTPS entrypoint
-      - "--entrypoints.websecure.address=:8443"
+      - "--entrypoints.websecure.address=:443"
       - "--entrypoints.websecure.http.tls=true"
     ports:
       - "8888:8888"
-      - "8443:8443"
-      - "8089:8080"
+      - "443:443"
+      - "80:80"
     volumes:
       - '/var/run/docker.sock:/var/run/docker.sock:ro'
     depends_on:
@@ -28,10 +28,6 @@ services:
   frama-c-gui:
     image: framac/frama-c-gui:24.0
     restart: unless-stopped
-#    command: frama-c-gui -rte -eva src/min_heap.c
-#    command: frama-c-gui -rte src/min_heap.c
-#    command: frama-c-gui -rte src/min_heap.c
-#    command: frama-c-gui -wp-skip-fct realloc src/min_heap.c # does not work, only first level function i suppose?
     command: frama-c-gui -rte -wp-prover altergo,cvc4 -wp-timeout 30 -wp-par 8 -wp-cache none -wp-smoke-tests src/min_heap.c
     volumes:
       - ./src:/home/opam/src
@@ -46,8 +42,8 @@ services:
     environment:
       - RUN_XTERM=no
       - RUN_FLUXBOX=yes
-      - DISPLAY_WIDTH=2240
-      - DISPLAY_HEIGHT=1400
+      - DISPLAY_WIDTH=1680
+      - DISPLAY_HEIGHT=1050
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frama-c.rule=Host(`frama-c.${DOMAIN:-local}`)"
@@ -66,3 +62,4 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.vscode.rule=Host(`vscode.${DOMAIN:-local}`)"
       - "traefik.http.routers.vscode.entrypoints=websecure"
+

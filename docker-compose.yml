@@ -49,7 +49,7 @@ services:
       - "traefik.http.routers.frama-c.rule=Host(`frama-c.${DOMAIN:-local}`)"
       - "traefik.http.routers.frama-c.entrypoints=websecure"
       - "traefik.http.routers.frama-c.middlewares=vnc-auto-resize"
-      - "traefik.http.middlewares.vnc-auto-resize.redirectregex.regex=^(https://frama-c.${DOMAIN:-local}:443)/?$$"
+      - "traefik.http.middlewares.vnc-auto-resize.redirectregex.regex=^(https://frama-c.${DOMAIN:-local})/?$$"
       - 'traefik.http.middlewares.vnc-auto-resize.redirectregex.replacement=$${1}/vnc.html?resize=scale&autoconnect=1'
   
   vscode-server:

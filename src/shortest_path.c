@@ -56,6 +56,20 @@ void printShortesPath(VertexList *vertices, int endVertexId) {
     printf("%d\n", endVertexId);
 }
 
+/*
+ * Usage:
+ * 	./shortest_path [--interactive]
+ *
+ * Input:
+ * 	<count_of_verticies>
+ * 	<start_vertex_index>
+ * 	<end_vertex_index>
+ * 	(<from-index> <to-index> <weight>)*
+ * 
+ * Output:
+ * 	Indexes of vertices representing shortes path
+ * 	from start vertex to end vertex.
+ */
 int main (int argc, char *argv[]) {
     int interactive = 0;
 
